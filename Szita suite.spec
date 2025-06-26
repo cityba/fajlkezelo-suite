@@ -2,11 +2,11 @@
 
 
 a = Analysis(
-    ['C:\\Users\\ap\\Documents\\sablonospython\\sablon.py'],
+    ['sablon.py'],
     pathex=[],
-    binaries=[],
-    datas=[],
-    hiddenimports=[],
+    binaries=[('\\multimedia', 'PyQt5\\Qt\\plugins\\multimedia'), ('\\imageformats', 'PyQt5\\Qt\\plugins\\imageformats'), ('\\mediaservice', 'PyQt5\\Qt\\plugins\\mediaservice')],
+    datas=[('egyes.py', '.'), ('kettes.py', '.'), ('harmas.py', '.'), ('negyes.py', '.')],
+    hiddenimports=['docx', 'openpyxl', 'PyPDF2', 'PyQt5.QtMultimedia', 'PyQt5.QtMultimediaWidgets'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

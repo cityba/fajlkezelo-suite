@@ -11,7 +11,7 @@ from PyQt5.QtCore import Qt, QUrl, QObject, pyqtSignal, QThread, QSize
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtGui import QPixmap, QFont, QImage, QColor, QBrush, QPainter
-
+ 
 class MediaScanner(QThread):
     media_found = pyqtSignal(str, str, float, str)  # file, path, size, file_type
     progress = pyqtSignal(int)
