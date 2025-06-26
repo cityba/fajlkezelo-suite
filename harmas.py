@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import platform
 from PyQt5.QtWidgets import (
@@ -11,7 +12,14 @@ from PyQt5.QtCore import Qt, QUrl, QObject, pyqtSignal, QThread, QSize
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtGui import QPixmap, QFont, QImage, QColor, QBrush, QPainter
- 
+
+# PDF olvasási hiba javítása
+try:
+    from PyPDF2 import PdfReader
+except ImportError:
+    PdfReader = None
+    print("Figyelmeztetés: PyPDF2 nincs telepítve, PDF fájlok nem lesznek támogatva")
+
 class MediaScanner(QThread):
     media_found = pyqtSignal(str, str, float, str)  # file, path, size, file_type
     progress = pyqtSignal(int)
@@ -121,6 +129,42 @@ class ImageViewer(QGraphicsView):
 class MediaFinder(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        # EXE kompatibilitás - általános megoldás
+        if getattr(sys, 'frozen', False):
+            try:
+                base_path = sys._MEIPASS
+                
+                # Különböző lehetséges plugin útvonalak
+                possible_paths = [
+                    os.path.join(base_path, 'PyQt5', 'Qt5', 'plugins'),
+                    os.path.join(base_path, 'PyQt5', 'Qt', 'plugins'),
+                    os.path.join(base_path, 'Qt5', 'plugins'),
+                    os.path.join(base_path, 'plugins'),
+                    os.path.join(base_path, 'qt5_applications', 'Qt', 'plugins')
+                ]
+                
+                # Megkeressük az első létező útvonalat
+                plugin_path = None
+                for path in possible_paths:
+                    if os.path.exists(path):
+                        plugin_path = path
+                        break
+                
+                if plugin_path:
+                    os.environ['QT_PLUGIN_PATH'] = plugin_path
+                    from PyQt5.QtCore import QCoreApplication
+                    QCoreApplication.addLibraryPath(plugin_path)
+                    print(f"QT_PLUGIN_PATH beállítva: {plugin_path}")
+                
+                # Windows DLL útvonal
+                if sys.platform == 'win32' and plugin_path:
+                    bin_path = os.path.join(plugin_path, '..', 'bin')
+                    if os.path.exists(bin_path):
+                        os.environ['PATH'] = bin_path + ';' + os.environ['PATH']
+            except Exception as e:
+                print(f"Hiba a plugin útvonal beállításánál: {str(e)}")
+        
         self.selected_folder = ""
         self.player = QMediaPlayer()
         self.scanner = None
@@ -392,10 +436,12 @@ class MediaFinder(QWidget):
         if not to_delete:
             return
 
+        # JAVÍTVA: QHeaderView.No helyett QMessageBox.No
         reply = QMessageBox.question(
-            self, 'Megerősítés',
+            self, 
+            'Megerősítés',
             f"{len(to_delete)} fájl törlése?",
-            QMessageBox.Yes | QHeaderView.No
+            QMessageBox.Yes | QMessageBox.No  # Javított sor
         )
         
         if reply == QMessageBox.Yes:
