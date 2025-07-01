@@ -1,128 +1,151 @@
-Szita Fájlkezelő Suite 2025
- 
-Áttekintés
-A Szita Fájlkezelő Suite egy átfogó Python alapú eszközkészlet, amely különböző fájl- és rendszerkezelési feladatokat egységes felületen integrál. Az alkalmazás 5 fő modult tartalmaz, amelyek a következő területeket fedik le:
-<<<<<<< HEAD
+# Szita Fájlkezelő Suite 2025
 
-Fájlkezelés - Másolás, duplikátumkezelés, üres mappák kezelése
-=======
-exe fájl készítése "pyinstaller szita.spec"     
-=======
->>>>>>> e6a7714 (Javítások)
+## Áttekintés
+A Szita Fájlkezelő Suite egy Python alapú, moduláris rendszer, amely különböző fájlkezelési és hálózati feladatokat egyesít modern felhasználói felületen. Az alkalmazás öt fő modult tartalmaz:
 
-Fájlkezelés - Másolás, duplikátumkezelés, üres mappák kezelése
+- **Fájlkezelő** – Másolás, duplikációk kezelése, üres mappák törlése
+- **Fájlkereső** – Tartalomalapú keresés fájlformátumokban
+- **Médiafájl-kezelő** – Képek, videók előnézete és törlése
+- **Hálózati eszközkereső** – Aktív eszközök felderítése LAN-on
+- **EXE Gyártó** – Python szkriptekből végrehajtható fájlok készítése
 
-Fájlkereső - Tartalom- és fájlnév alapú keresés
+---
 
-Médiafájlok - Képek, videók és hangfájlok kezelése
+## Főbb funkciók
 
-Hálózat - Hálózati eszközök felderítése
+### 📁 Fájlkezelő
+- Fájlmásolás forrás és célmappák között
+- Duplikált fájlok azonosítása és törlése
+- Üres mappák keresése
+- Fájltípus alapú szűrés (.py, .html, .js stb.)
 
-EXE Gyártó - Python szkriptekből aláírt végrehajtható fájlok készítése
+### 🔍 Fájlkereső
+- Keresés `.docx`, `.xlsx`, `.pdf` tartalom alapján
+- Dátumszűrés, fájltípus kizárás
+- Eredmények exportja Excelbe
 
-Főbb funkciók
-Fájlkezelő modul
-Fájlok másolása forrás- és célmappa között
+### 🎞️ Médiafájl-kezelő
+- Képek/videók előnézete, törlése
+- Videólejátszó beépítve
+- Nagyítás/kicsinyítés képeken
+- Alapértelmezett appal megnyitás
 
-Duplikált fájlok keresése és kezelése
+### 🌐 Hálózati eszközkereső
+- ARP és ping alapú eszközfelderítés
+- Eszköztípusok automatikus azonosítása
+- MAC-címek, hosztnevek megjelenítése
+- Színkódolt lista
 
-Üres mappák azonosítása és törlése
+### 🛠️ EXE Gyártó
+- `.py` fájlokból `.exe` generálás
+- Digitális aláírás (PFX fájl)
+- Inno Setup alapú telepítőkészítés
+- GPU-gyorsítás, párhuzamosítás támogatás
 
-Fájltípus szerinti szűrés (.py, .html, .js, stb.)
+---
 
-Fájlba Kereső
-Tartalomkeresés különböző fájlformátumokban (docx, xlsx, pdf)
+## Technológiai háttér
 
-Dátumtartomány szerinti szűrés
+- **Nyelv**: Python 3.10+
+- **GUI**: PyQt5
+- **Függőségek**:
+  - `PyPDF2`, `python-docx`, `openpyxl`
+  - `psutil`, `GPUtil`, `PyQt5.QtMultimedia`
 
-Fájlkiterjesztések kizárása
+---
 
-Találatok exportálása Excel fájlba
+## Telepítés és futtatás
 
-Médiafájlok
-Képek és videók előnézete
-
-Fájlok törlése
-
-Képek nagyítása/kicsinyítése
-
-Videók lejátszása beépített lejátszóval
-
-Fájlok megnyitása alapértelmezett alkalmazással
-
-Hálózati eszközök
-Aktív eszközök felderítése ARP és ping segítségével
-
-Eszköztípusok automatikus azonosítása (IP kamera, NVR)
-
-MAC címek és hosztnevek megjelenítése
-
-Eszközök színes megkülönböztetése típus szerint
-
-EXE Gyártó
-Python szkriptekből .exe fájlok készítése
-
-Digitális aláírás hozzáadása PFX fájllal
-
-Telepítőkészítő generálása Inno Setup segítségével
-
-Teljesítményoptimalizálás (GPU gyorsítás, párhuzamos feldolgozás)
-
-Technológiai háttér
-Programozási nyelv: Python 3.10+
-
-GUI keretrendszer: PyQt5
-
-Függőségek:
-
-PyPDF2 (PDF fájlok kezeléséhez)
-
-python-docx (Word fájlok kezeléséhez)
-
-openpyxl (Excel fájlok kezeléséhez)
-
-psutil (erőforrás-felhasználás monitorozásához)
-
-GPUtil (GPU használat monitorozásához)
-
-Telepítés és futtatás
-Függőségek telepítése:
-
-bash
+### Függőségek telepítése
+```bash
 pip install -r requirements.txt
-Alkalmazás indítása:
-
-bash
+Alkalmazás futtatása
+ 
 python sablon.py
-EXE fordításhoz
-Az alkalmazás PyInstaller segítségével fordítható végrehajtható fájllá:
-
-bash
-pyinstaller --noconfirm --onefile --windowed --icon "icon.ico" --upx-dir "upx" --name "Szita suite" --add-data "egyes.py;." --add-data "kettes.py;." --add-data "harmas.py;." --add-data "negyes.py;." --hidden-import docx --hidden-import openpyxl --hidden-import PyPDF2 --hidden-import PyQt5.QtMultimedia --hidden-import PyQt5.QtMultimediaWidgets --add-data "otos.py;." --hidden-import psutil --hidden-import GPUtil --add-binary "PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia" --clean "sablon.py"
+EXE fordítás PyInstaller-rel
+ 
+pyinstaller --noconfirm --onefile --windowed --icon "icon.ico" --upx-dir "upx" --name "Szita suite" \
+--add-data "egyes.py;." --add-data "kettes.py;." --add-data "harmas.py;." --add-data "negyes.py;." \
+--add-data "otos.py;." \
+--hidden-import docx --hidden-import openpyxl --hidden-import PyPDF2 \
+--hidden-import PyQt5.QtMultimedia --hidden-import PyQt5.QtMultimediaWidgets \
+--hidden-import psutil --hidden-import GPUtil \
+--add-binary "PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia" \
+--clean "sablon.py"
 Képernyőképek
 Fájlkezelő	Médiafájlok
-https://file_manager.png	https://media_files.png
+	
+
 Fájlkereső	EXE Gyártó
-https://file_search.png	https://exe_builder.png
+	
+
 Használati esetek
-Fájlok rendszerezése és tisztítása
+Fájlrendszer tisztítás, karbantartás
 
-Tartalomkeresés nagy dokumentumgyűjteményekben
+Dokumentumgyűjtemények gyors átvizsgálása
 
-Médiafájlok gyors áttekintése és kezelése
+Médiafájlok előnézete, gyors kezelése
 
-Hálózati biztonság ellenőrzése
+Hálózati eszközök feltérképezése
 
-Python alkalmazások terjesztésre kész .exe fájljainak létrehozása
+Python alkalmazások .exe formátumba fordítása
 
 Jellemzők
-Modern, sötét téma
+Sötét téma
 
-Reszponzív felület
+Reszponzív PyQt5 felület
 
-Többszálas feldolgozás
+Többszálas működés
 
-Erőforrás-hatékony megvalósítás
+Erőforrás-optimalizált megvalósítás
 
-Platformfüggetlen működés (Windows, macOS, Linux)
+Platformfüggetlen (Windows, macOS, Linux)
 
+🇬🇧 English Version
+Szita File Manager Suite 2025
+Overview
+Szita Suite is a modular Python-based toolset combining file operations, search, media handling, networking, and executable creation in a single unified interface.
+
+Modules:
+
+File Manager
+
+File Search
+
+Media Files
+
+Network Scanner
+
+EXE Builder
+
+Technologies:
+Python 3.10+, PyQt5, PyPDF2, openpyxl, python-docx, psutil, GPUtil
+
+Install:
+
+ 
+pip install -r requirements.txt
+python sablon.py
+Build EXE:
+
+ 
+pyinstaller --onefile sablon.py [...options...]
+Use cases:
+
+Clean and manage file systems
+
+Search document collections
+
+Preview and delete media
+
+Scan LAN devices
+
+Build signed EXE installers from Python
+
+Features:
+
+Dark UI, responsive design
+
+Multithreading, GPU optimization
+
+Cross-platform (Windows/macOS/Linux)
