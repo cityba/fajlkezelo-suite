@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTreeWidget,
     QTreeWidgetItem, QFileDialog, QAbstractItemView, QHeaderView,
     QLabel, QCheckBox, QMessageBox, QSplitter, QLineEdit, QFrame,
-    QDialog, QListWidget, QProgressBar
+    QDialog, QListWidget, QProgressBar 
 )
 from PyQt5.QtCore import Qt, QSize, QThread, pyqtSignal
 from PyQt5.QtGui import QFont, QIcon
@@ -62,12 +62,38 @@ class FileCopyApp(QWidget):
         lbl_filetype.setStyleSheet("color: white; font-weight: bold;")
         self.filetype_entry = QLineEdit()
         self.filetype_entry.setText(".py, .html, .js, .jpg, .png")
-        btn_search = QPushButton("Keresés")
+        self.filetype_entry.setStyleSheet("""
+            QLineEdit {
+                padding: 8px;
+                font-size: 14px;
+            }
+        """)
+        
+        # Keresés gomb új stílusa
+        btn_search = QPushButton(" 🔍 Keresés ")
+        btn_search.setStyleSheet("""
+            QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                font-weight: bold;
+                font-size: 12px;
+                padding: 10px 20px;
+                border-radius: 5px;
+                min-width: 400px;
+            }
+            QPushButton:hover {
+                background-color: #45a049;
+            }
+        """)
         btn_search.clicked.connect(self.search_files)
+        
         filetype_layout.addWidget(lbl_filetype)
         filetype_layout.addWidget(self.filetype_entry)
         filetype_layout.addWidget(btn_search)
         input_layout.addLayout(filetype_layout)
+        
+        # Fájltípus mező teljes szélességűvé tétele
+        input_layout.setStretch(2, 1)  # Filetype layout stretch
         
         main_layout.addWidget(input_frame)
         

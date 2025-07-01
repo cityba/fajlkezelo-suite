@@ -7,10 +7,10 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QSize
 import platform
- 
+
 # Import modules with error handling
 modules = {}
-module_names = ["egyes", "kettes", "harmas", "negyes"]
+module_names = ["egyes", "kettes", "harmas", "negyes", "otos"]
 
 for module_name in module_names:
     try:
@@ -46,8 +46,28 @@ class MainApp(QMainWindow):
             }
         """)
         
+        # Beállítjuk az alkalmazás ikonját
+        self.get_icon_path()
+        self.icon_path = self.get_icon_path()
+        if self.get_icon_path:
+            self.setWindowIcon(QIcon(self.icon_path))
         self.init_ui()
         self.init_menu()
+
+    def get_icon_path(self):
+        base_path = getattr(sys, '_MEIPASS', os.path.abspath('.'))
+        
+        # Try .ico file (Windows)
+        ico_path = os.path.join(base_path, 'icon.ico')
+        if os.path.exists(ico_path):
+            return ico_path
+        
+        # Try .png file (cross-platform)
+        png_path = os.path.join(base_path, 'icon.png')
+        if os.path.exists(png_path):
+            return png_path
+        
+        return None
 
     def init_ui(self):
         central_widget = QWidget(self)
@@ -82,7 +102,8 @@ class MainApp(QMainWindow):
             ("Fájl kezelő", "egyes", "FileCopyApp"),
             ("Fájlba kereső", "kettes", "FileSearchApp"),
             ("Médiafájlok", "harmas", "MediaFinder"),
-            ("Hálózat", "negyes", "NetworkScanner")
+            ("Hálózat", "negyes", "NetworkScanner"),
+            ("Sig és exe gyártó", "otos", "BuildApp")
         ]
         
         for name, module_name, class_name in tab_data:
@@ -127,7 +148,8 @@ class MainApp(QMainWindow):
             ("Fájl kezelő", "egyes", "FileCopyApp"),
             ("Fájlba kereső", "kettes", "FileSearchApp"),
             ("Médiafájlok", "harmas", "MediaFinder"),
-            ("Hálózat", "negyes", "NetworkScanner")
+            ("Hálózat", "negyes", "NetworkScanner"),
+            ("Sig és exe gyártó", "otos", "BuildApp")
         ]):
             tools_menu.addAction(name, lambda idx=i: self.tabs.setCurrentIndex(idx))
         
@@ -159,3 +181,7 @@ if __name__ == "__main__":
     window = MainApp()
     window.show()
     sys.exit(app.exec_())
+    
+ # jó  --add-data egyes.py;.  --add-data kettes.py;.   --add-data harmas.py;.   --add-data negyes.py;.  --hidden-import docx   --hidden-import openpyxl   --hidden-import PyPDF2   --hidden-import PyQt5.QtMultimedia   --hidden-import PyQt5.QtMultimediaWidgets  --add-data otos.py;.  --hidden-import psutil --hidden-import GPUtil  --add-binary C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia   --add-binary C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia 
+
+ #megy  pyinstaller --noconfirm --onefile --windowed `  --icon "C:\Users\ap\Downloads\favicon.ico" `  --upx-dir "D:\upx" `  --name "Szita suite" `  --add-data "egyes.py;." `  --add-data "kettes.py;." `  --add-data "harmas.py;." `  --add-data "negyes.py;." `  --hidden-import docx `  --hidden-import openpyxl `  --hidden-import PyPDF2 `  --hidden-import PyQt5.QtMultimedia `  --hidden-import PyQt5.QtMultimediaWidgets ` --add-data "otos.py;."  --hidden-import psutil --hidden-import GPUtil  --add-binary "C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia" `  --add-binary "C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia" `  --clean "sablon.py"

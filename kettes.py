@@ -14,6 +14,7 @@ from docx import Document
 from openpyxl import Workbook
 from PyPDF2 import PdfReader
 from openpyxl import load_workbook
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def read_file_content(file_path):
     try:
@@ -46,23 +47,27 @@ def read_file_content(file_path):
         return None
 
 def open_with_application(file_path):
-    if os.path.isdir(file_path):
+    # Normalizáljuk az elérési utat a platformnak megfelelően
+    normalized_path = os.path.normpath(file_path)
+    
+    if os.path.isdir(normalized_path):
         if os.name == 'nt':  # Windows
-            subprocess.Popen(["explorer", file_path], shell=True)
+            # Explorer használata a megadott mappa megnyitásához
+            subprocess.Popen(f'explorer "{normalized_path}"', shell=True)
         elif os.name == 'posix':  # Linux, macOS
-            subprocess.Popen(["xdg-open", file_path])
-    elif file_path.endswith(('.zip', '.rar')) and os.name == 'nt':
-        subprocess.Popen(["start", "WinRAR", file_path], shell=True)
+            subprocess.Popen(["xdg-open", normalized_path])
+    elif normalized_path.endswith(('.zip', '.rar')) and os.name == 'nt':
+        subprocess.Popen(f'start winrar "{normalized_path}"', shell=True)
     else:
         if os.name == 'nt':
-            subprocess.run(['start', '', file_path], shell=True)
+            # START paranccsal nyitjuk meg a fájlt a hozzárendelt alkalmazással
+            subprocess.Popen(f'start "" "{normalized_path}"', shell=True)
         elif os.name == 'posix':
-            subprocess.Popen(["xdg-open", file_path])
+            subprocess.Popen(["xdg-open", normalized_path])
 
 class SearchWorker(QThread):
     update_progress = pyqtSignal(int, int, int, float)
-    file_found = pyqtSignal(str, int)
-    file_found_batch = pyqtSignal(list)  # JAVÍTVA: Signal deklarálva
+    file_found_single = pyqtSignal(str, int)
     search_finished = pyqtSignal()
     status_update = pyqtSignal(str)
 
@@ -78,6 +83,7 @@ class SearchWorker(QThread):
         self.start_date = start_date
         self.end_date = end_date
         self.stop_flag = False
+        self.compiled_pattern = re.compile(pattern, re.IGNORECASE if not exact_match else 0)
         
         self.excluded_extensions = [
             ".exe", ".mp3", ".mp4", ".wav", ".jpg", ".jpeg", ".png", ".gif", ".bmp",
@@ -89,14 +95,30 @@ class SearchWorker(QThread):
 
     def run(self):
         try:
-            self.status_update.emit("Fájlok számolása...")
-            
-            # JAVÍTVA: Hatékonyabb fájlszámolás os.scandir-rel
+            self.status_update.emit("Fájlok listázása...")
+            file_list = []
             total_files = 0
-            for root, dirs, files in os.walk(self.folder):
+            
+            # Gyorsított bejárás os.scandir-rel
+            for entry in os.scandir(self.folder):
                 if self.stop_flag:
                     return
-                total_files += len(dirs) if self.search_folders_only else len(files)
+                    
+                if entry.is_dir(follow_symlinks=False):
+                    # Rekurzívan bejárjuk az almappákat
+                    for root, dirs, files in os.walk(entry.path):
+                        if self.stop_flag:
+                            return
+                        if self.search_folders_only:
+                            items = dirs
+                        else:
+                            items = files
+                        for item in items:
+                            file_list.append(os.path.join(root, item))
+                            total_files += 1
+                else:
+                    file_list.append(entry.path)
+                    total_files += 1
             
             if total_files == 0:
                 self.search_finished.emit()
@@ -105,87 +127,81 @@ class SearchWorker(QThread):
             processed_files = 0
             found_files = 0
             start_time = time.time()
-            batch_results = []  # Kötegekben gyűjtjük az eredményeket
             
-            # JAVÍTVA: os.scandir használata gyorsabb bejáráshoz
-            for root_dir, dirs, files in os.walk(self.folder):
+            # Szálkezelés beállítása
+            num_workers = max(1, os.cpu_count() - 1)  # CPU magok száma -1
+             
+            batch_size = min(100, max(10, total_files // 100))  # Dinamikus kötegméret
+            
+            # Feldolgozó függvény szálakhoz
+            def process_file(file_path):
                 if self.stop_flag:
-                    break
-                    
-                items = dirs if self.search_folders_only else files
+                    return (file_path, 0)
                 
-                for item_name in items:
+                item_name = os.path.basename(file_path)
+                match_count = 0
+                
+                # Dátumszűrés
+                if self.start_date or self.end_date:
+                    try:
+                        creation_time = os.path.getctime(file_path)
+                        creation_date = datetime.fromtimestamp(creation_time).date()
+                        if self.start_date and creation_date < self.start_date:
+                            return (file_path, 0)
+                        if self.end_date and creation_date > self.end_date:
+                            return (file_path, 0)
+                    except:
+                        pass
+                
+                # Kiterjesztés szűrés
+                if self.exclude_extensions and not self.search_folders_only:
+                    if any(item_name.lower().endswith(ext) for ext in self.excluded_extensions):
+                        return (file_path, 0)
+                
+                # Keresés optimalizálva
+                if self.search_filenames_only or self.search_folders_only:
+                    if self.compiled_pattern.search(item_name):
+                        match_count = 1
+                else:
+                    try:
+                        file_size = os.path.getsize(file_path)
+                        if file_size > 10 * 1024 * 1024:  # 10 MB-nál nagyobb fájl
+                            if self.compiled_pattern.search(item_name):
+                                match_count = 1
+                        else:
+                            content = read_file_content(file_path)
+                            if content:
+                                match_count = len(self.compiled_pattern.findall(content))
+                    except:
+                        if self.compiled_pattern.search(item_name):
+                            match_count = 1
+                
+                # Ha találtunk, azonnal küldjük a signalt
+                if match_count > 0:
+                    self.file_found_single.emit(file_path, match_count)
+                return (file_path, match_count)
+            
+            # Többszálas feldolgozás
+            with ThreadPoolExecutor( max_workers=num_workers) as executor:
+                futures = [executor.submit(process_file, fp) for fp in file_list]
+                
+                for future in as_completed(futures):
                     if self.stop_flag:
+                        for f in futures:
+                            f.cancel()
                         break
                         
-                    item_path = os.path.join(root_dir, item_name)
-                    
-                    # Dátumszűrés - korai kizárás
-                    if self.start_date or self.end_date:
-                        try:
-                            creation_time = os.path.getctime(item_path)
-                            creation_date = datetime.fromtimestamp(creation_time).date()
-                            
-                            if self.start_date and creation_date < self.start_date:
-                                continue
-                            if self.end_date and creation_date > self.end_date:
-                                continue
-                        except:
-                            pass
-                    
-                    # Kiterjesztés szűrés - korai kizárás
-                    if self.exclude_extensions and not self.search_folders_only:
-                        if any(item_name.lower().endswith(ext) for ext in self.excluded_extensions):
-                            processed_files += 1
-                            # Csak ritkán frissítünk
-                            if processed_files % 100 == 0:
-                                self.update_progress.emit(processed_files, total_files, found_files, time.time() - start_time)
-                            continue
-                    
-                    # Keresés optimalizálva
-                    match_count = 0
-                    
-                    # Ha csak fájlnévben keresünk, ne olvassuk a tartalmat
-                    if self.search_filenames_only or self.search_folders_only:
-                        if re.search(self.pattern, item_name, re.IGNORECASE if not self.exact_match else 0):
-                            match_count = 1
-                    else:
-                        # Ne nyissuk meg a nagyon nagy fájlokat
-                        try:
-                            file_size = os.path.getsize(item_path)
-                            if file_size > 10 * 1024 * 1024:  # 10 MB-nál nagyobb fájl
-                                # Nagy fájlok esetén csak a fájlnévben keresünk
-                                if re.search(self.pattern, item_name, re.IGNORECASE if not self.exact_match else 0):
-                                    match_count = 1
-                            else:
-                                content = read_file_content(item_path)
-                                if content:
-                                    # JAVÍTVA: Előre lefordított regex használata
-                                    pattern = re.compile(self.pattern, re.IGNORECASE if not self.exact_match else 0)
-                                    match_count = len(pattern.findall(content))
-                        except:
-                            # Ha méret lekérdezése sikertelen, csak a névben keresünk
-                            if re.search(self.pattern, item_name, re.IGNORECASE if not self.exact_match else 0):
-                                match_count = 1
+                    file_path, match_count = future.result()
+                    processed_files += 1
                     
                     if match_count > 0:
                         found_files += 1
-                        batch_results.append((item_path, match_count))
                     
-                    processed_files += 1
-                    
-                    # Ritkább frissítés - csak minden 100 fájl után
-                    if processed_files % 100 == 0 or processed_files == total_files:
-                        # Kötegekben küldjük az eredményeket
-                        if batch_results:
-                            self.file_found_batch.emit(batch_results)
-                            batch_results = []
-                        self.update_progress.emit(processed_files, total_files, found_files, time.time() - start_time)
+                    # Progressz frissítése
+                    if processed_files % batch_size == 0 or processed_files == total_files:
+                        elapsed = time.time() - start_time
+                        self.update_progress.emit(processed_files, total_files, found_files, elapsed)
             
-            # Maradék eredmények küldése
-            if batch_results:
-                self.file_found_batch.emit(batch_results)
-                
             self.status_update.emit("Keresés befejezve")
             self.search_finished.emit()
         except Exception as e:
@@ -456,7 +472,7 @@ class FileSearchApp(QWidget):
         
         # Signal összekötések
         self.search_worker.update_progress.connect(self.update_progress)
-        self.search_worker.file_found_batch.connect(self.add_results_batch)  # JAVÍTVA
+        self.search_worker.file_found_single.connect(self.add_result)
         self.search_worker.search_finished.connect(self.search_finished)
         self.search_worker.status_update.connect(self.status_label.setText)
         self.search_worker.start()
@@ -488,35 +504,36 @@ class FileSearchApp(QWidget):
                 f"Hátralévő idő: {time_str}"
             )
 
-    def add_results_batch(self, results_batch):
-        """Kötegekben adja hozzá az eredményeket"""
-        for file_path, match_count in results_batch:
-            self.results.append((file_path, match_count))
-            
-            item = QTreeWidgetItem([
-                file_path,
-                str(match_count)
-            ])
-            
-            # Művelet gombok
-            button_frame = QWidget()
-            button_layout = QHBoxLayout(button_frame)
-            button_layout.setContentsMargins(0, 0, 0, 0)
-            
-            btn_open = QPushButton("Fájl")
-            btn_open.setFixedWidth(60)
-            # JAVÍTVA: Lambda kifejezés javítása
-            btn_open.clicked.connect(lambda checked, p=file_path: open_with_application(p))
-            
-            btn_folder = QPushButton("Mappa")
-            btn_folder.setFixedWidth(60)
-            btn_folder.clicked.connect(lambda checked, p=file_path: open_with_application(os.path.dirname(p)))
-            
-            button_layout.addWidget(btn_open)
-            button_layout.addWidget(btn_folder)
-            
-            self.tree.addTopLevelItem(item)
-            self.tree.setItemWidget(item, 2, button_frame)
+    def add_result(self, file_path, match_count):
+        """Egy találat hozzáadása azonnal"""
+        self.results.append((file_path, match_count))
+        
+        item = QTreeWidgetItem([
+            file_path,
+            str(match_count)
+        ])
+        
+        # Művelet gombok
+        button_frame = QWidget()
+        button_layout = QHBoxLayout(button_frame)
+        button_layout.setContentsMargins(0, 0, 0, 0)
+        
+        btn_open = QPushButton("Fájl")
+        btn_open.setFixedWidth(60)
+        btn_open.clicked.connect(lambda checked, p=file_path: open_with_application(p))
+        
+        btn_folder = QPushButton("Mappa")
+        btn_folder.setFixedWidth(60)
+        btn_folder.clicked.connect(lambda checked, p=file_path: open_with_application(os.path.dirname(p)))
+        
+        button_layout.addWidget(btn_open)
+        button_layout.addWidget(btn_folder)
+        
+        self.tree.addTopLevelItem(item)
+        self.tree.setItemWidget(item, 2, button_frame)
+        
+        # Automatikus görgetés az új elemhez
+        self.tree.scrollToItem(item)
 
     def search_finished(self):
         self.btn_search.setEnabled(True)

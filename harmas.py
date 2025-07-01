@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import platform
+import concurrent.futures
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTreeWidget,
     QTreeWidgetItem, QFileDialog, QAbstractItemView, QHeaderView,
@@ -24,6 +25,7 @@ class MediaScanner(QThread):
     media_found = pyqtSignal(str, str, float, str)  # file, path, size, file_type
     progress = pyqtSignal(int)
     finished = pyqtSignal()
+    status_update = pyqtSignal(str)
 
     def __init__(self, folder):
         super().__init__()
@@ -32,31 +34,58 @@ class MediaScanner(QThread):
         self.media_exts = ['.mp3', '.mp4', '.jpg', '.jpeg', '.png', '.gif', '.mov', '.avi', '.wav', '.mkv', '.bmp', '.tiff']
 
     def run(self):
-        total_files = 0
-        for root, _, files in os.walk(self.folder):
-            total_files += len(files)
-            
-        if total_files == 0:
-            self.finished.emit()
-            return
-            
-        processed = 0
+        # Összegyűjtjük az összes fájl elérési útját
+        file_paths = []
+        self.status_update.emit("Fájlok listázása...")
         for root, _, files in os.walk(self.folder):
             for file in files:
                 if not self._is_running:
                     return
-                    
-                if any(file.lower().endswith(ext) for ext in self.media_exts):
-                    path = os.path.join(root, file)
-                    try:
-                        size = os.path.getsize(path) / (1024 * 1024)
-                        file_type = self.get_file_type(file)
-                        self.media_found.emit(file, path, size, file_type)
-                    except Exception:
-                        continue
+                file_paths.append(os.path.join(root, file))
+        
+        total_files = len(file_paths)
+        if total_files == 0:
+            self.finished.emit()
+            return
+            
+        # Többszálas feldolgozás
+        self.status_update.emit("Fájlok feldolgozása...")
+        processed = 0
+        batch_size = 100  # Kötegenként frissítjük a folyamatjelzőt
+        num_workers = max(1, os.cpu_count() - 1)  # CPU magok száma -1
+        
+        # Feldolgozó függvény
+        def process_file(path):
+            if not self._is_running:
+                return None
                 
+            file = os.path.basename(path)
+            if any(file.lower().endswith(ext) for ext in self.media_exts):
+                try:
+                    size = os.path.getsize(path) / (1024 * 1024)  # MB
+                    file_type = self.get_file_type(file)
+                    return (file, path, size, file_type)
+                except Exception as e:
+                    return None
+            return None
+
+        # Többszálas feldolgozás
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
+            futures = [executor.submit(process_file, path) for path in file_paths]
+            
+            for future in concurrent.futures.as_completed(futures):
+                if not self._is_running:
+                    # Megszakítjuk, ha kell
+                    for f in futures:
+                        f.cancel()
+                    return
+                    
+                result = future.result()
+                if result:
+                    self.media_found.emit(*result)
+                    
                 processed += 1
-                if processed % 10 == 0:
+                if processed % batch_size == 0 or processed == total_files:
                     self.progress.emit(int((processed / total_files) * 100))
         
         self.finished.emit()
@@ -364,6 +393,7 @@ class MediaFinder(QWidget):
         self.scanner.media_found.connect(self.add_media_item)
         self.scanner.progress.connect(self.progress.setValue)
         self.scanner.finished.connect(self.on_scan_finished)
+        self.scanner.status_update.connect(self.lbl_status.setText)
         self.scanner.start()
 
     def add_media_item(self, file, path, size, file_type):
