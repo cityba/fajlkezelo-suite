@@ -3,6 +3,7 @@ import shutil
 import datetime
 import platform
 import fnmatch
+import subprocess
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTreeWidget,
     QTreeWidgetItem, QFileDialog, QAbstractItemView, QHeaderView,
@@ -10,14 +11,14 @@ from PyQt5.QtWidgets import (
     QDialog, QListWidget, QProgressBar 
 )
 from PyQt5.QtCore import Qt, QSize, QThread, pyqtSignal
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QFont, QIcon, QBrush, QColor
 
 class FileCopyApp(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.file_vars = {}  # Kulcs: fájl elérési út, érték: { "item": QTreeWidgetItem, "selected": bool, "duplicate": bool }
+        self.file_vars = {}
         self.duplicates = {}
-        self.selected_items = set()  # Elérési utakat tárolunk
+        self.selected_items = set()
         self.empty_folders = []
         self.sort_column = None
         self.sort_reverse = False
@@ -93,13 +94,13 @@ class FileCopyApp(QWidget):
         input_layout.addLayout(filetype_layout)
         
         # Fájltípus mező teljes szélességűvé tétele
-        input_layout.setStretch(2, 1)  # Filetype layout stretch
+        input_layout.setStretch(2, 1)
         
         main_layout.addWidget(input_frame)
         
-        # Tree widget
+        # Tree widget - új oszlop hozzáadva
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["Kijelölés", "Fájlnév", "Méret (KB)", "Módosítva", "Duplikátum"])
+        self.tree.setHeaderLabels(["Kijelölés", "Fájlnév", "Méret (KB)", "Módosítva", "Duplikátum", "Elérési út"])
         self.tree.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.tree.setSortingEnabled(True)
         self.tree.setAlternatingRowColors(True)
@@ -202,15 +203,25 @@ class FileCopyApp(QWidget):
             QMessageBox.information(self, "Info", "Nincs találat a megadott feltételek mellett!")
 
     def add_file_item(self, file, path, size, mod_time, is_duplicate):
+        # Új oszlop: Elérési út (a fájl mappája)
+        folder_path = os.path.dirname(path)
+        
         item = QTreeWidgetItem([
             "☐", 
             file, 
             str(size),
             mod_time,
-            "Igen" if is_duplicate else "Nem"
+            "Igen" if is_duplicate else "Nem",
+            folder_path  # Új oszlop értéke
         ])
         item.setData(0, Qt.UserRole, path)
         self.tree.addTopLevelItem(item)
+        
+        # Az elérési út oszlop színezése és aláhúzása
+        item.setForeground(5, QBrush(QColor(30, 144, 255)))  # DodgerBlue szín
+        font = item.font(5)
+        font.setUnderline(True)
+        item.setFont(5, font)
         
         # Store file data
         self.file_vars[path] = {
@@ -219,9 +230,9 @@ class FileCopyApp(QWidget):
             "duplicate": is_duplicate
         }
         
-        # Highlight duplicates
+        # Highlight duplicates (minden oszlopra)
         if is_duplicate:
-            for i in range(5):
+            for i in range(6):
                 item.setBackground(i, Qt.yellow)
 
     def on_tree_click(self, item, column):
@@ -238,6 +249,24 @@ class FileCopyApp(QWidget):
                     self.selected_items.add(path)
                 else:
                     self.selected_items.discard(path)
+        
+        # Kattintás az elérési út oszlopra
+        elif column == 5:
+            path = item.data(0, Qt.UserRole)
+            folder_path = os.path.dirname(path)
+            self.open_folder(folder_path)
+
+    def open_folder(self, folder_path):
+        """Megnyitja a mappát a rendszer fájlkezelőjében"""
+        try:
+            if platform.system() == "Windows":
+                os.startfile(folder_path)
+            elif platform.system() == "Darwin":  # macOS
+                subprocess.Popen(["open", folder_path])
+            else:  # Linux
+                subprocess.Popen(["xdg-open", folder_path])
+        except Exception as e:
+            QMessageBox.warning(self, "Hiba", f"A mappa megnyitása sikertelen: {str(e)}")
 
     def select_all(self):
         for i in range(self.tree.topLevelItemCount()):
