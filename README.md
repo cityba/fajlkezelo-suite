@@ -7,7 +7,7 @@ A Szita Fájlkezelő Suite egy átfogó Python alapú eszközkészlet, amely kü
 Fájlkezelés - Másolás, duplikátumkezelés, üres mappák kezelése
 =======
 exe fájl készítése "pyinstaller szita.spec"     
->>>>>>> 65a6180c917f0de45d26a2ea1c894e7dc1f9b16a
+
 
 Fájlkereső - Tartalom- és fájlnév alapú keresés
 
