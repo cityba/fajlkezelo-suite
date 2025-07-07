@@ -6,13 +6,13 @@ import concurrent.futures
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTreeWidget,
     QTreeWidgetItem, QFileDialog, QAbstractItemView, QHeaderView,
-    QLabel, QCheckBox, QSplitter, QMessageBox, QSizePolicy, QProgressBar,
+    QLabel, QCheckBox, QSplitter, QMessageBox,  QProgressBar,
     QGraphicsView, QGraphicsScene
 )
-from PyQt5.QtCore import Qt, QUrl, QObject, pyqtSignal, QThread, QSize
-from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
+from PyQt5.QtCore import Qt, pyqtSignal, QThread
+from PyQt5.QtMultimedia import QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from PyQt5.QtGui import QPixmap, QFont, QImage, QColor, QBrush, QPainter
+from PyQt5.QtGui import QPixmap, QFont,  QColor, QBrush, QPainter
 
 # PDF olvasási hiba javítása
 try:

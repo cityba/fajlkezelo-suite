@@ -6,10 +6,10 @@ from datetime import datetime
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTreeWidget,
     QTreeWidgetItem, QFileDialog, QAbstractItemView, QHeaderView,
-    QLabel, QCheckBox, QSplitter, QMessageBox, QProgressBar, QLineEdit,
-    QFrame, QSizePolicy, QApplication
+    QLabel, QCheckBox, QMessageBox, QProgressBar, QLineEdit,
+    QFrame,  QApplication
 )
-from PyQt5.QtCore import Qt, QObject, pyqtSignal, QThread, QDate
+from PyQt5.QtCore import Qt,  pyqtSignal, QThread
 from docx import Document
 from openpyxl import Workbook
 from PyPDF2 import PdfReader

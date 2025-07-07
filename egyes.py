@@ -7,11 +7,11 @@ import subprocess
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTreeWidget,
     QTreeWidgetItem, QFileDialog, QAbstractItemView, QHeaderView,
-    QLabel, QCheckBox, QMessageBox, QSplitter, QLineEdit, QFrame,
+    QLabel,  QMessageBox,  QLineEdit, QFrame,
     QDialog, QListWidget, QProgressBar 
 )
-from PyQt5.QtCore import Qt, QSize, QThread, pyqtSignal
-from PyQt5.QtGui import QFont, QIcon, QBrush, QColor
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtGui import QFont,  QBrush, QColor
 
 class FileCopyApp(QWidget):
     def __init__(self, parent=None):

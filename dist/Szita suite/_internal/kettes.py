@@ -6,10 +6,10 @@ from datetime import datetime
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTreeWidget,
     QTreeWidgetItem, QFileDialog, QAbstractItemView, QHeaderView,
-    QLabel, QCheckBox, QSplitter, QMessageBox, QProgressBar, QLineEdit,
-    QFrame, QSizePolicy, QApplication
+    QLabel, QCheckBox, QMessageBox, QProgressBar, QLineEdit,
+    QFrame,  QApplication
 )
-from PyQt5.QtCore import Qt, QObject, pyqtSignal, QThread, QDate
+from PyQt5.QtCore import Qt,  pyqtSignal, QThread
 from docx import Document
 from openpyxl import Workbook
 from PyPDF2 import PdfReader
@@ -231,7 +231,7 @@ class FileSearchApp(QWidget):
             QPushButton {
                 background-color: #5799AD;
                 color: white;
-                padding: 8px 16px;
+                padding: 5px 5px;
                 border-radius: 4px;
                 font-weight: bold;
                 font-size: 10pt;
@@ -519,11 +519,11 @@ class FileSearchApp(QWidget):
         button_layout.setContentsMargins(0, 0, 0, 0)
         
         btn_open = QPushButton("Fájl")
-        btn_open.setFixedWidth(60)
+        btn_open.setFixedWidth(40)
         btn_open.clicked.connect(lambda checked, p=file_path: open_with_application(p))
         
         btn_folder = QPushButton("Mappa")
-        btn_folder.setFixedWidth(60)
+        btn_folder.setFixedWidth(40)
         btn_folder.clicked.connect(lambda checked, p=file_path: open_with_application(os.path.dirname(p)))
         
         button_layout.addWidget(btn_open)
