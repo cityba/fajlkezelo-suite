@@ -108,7 +108,7 @@ Erőforrás-optimalizált megvalósítás
 
 Platformfüggetlen (Windows, macOS, Linux)
 
-🇬🇧 English Version
+
 # Szit File Manager Suite 2025
 
 ## Overview
