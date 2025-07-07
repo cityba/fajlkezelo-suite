@@ -8,6 +8,8 @@ A Szita Fájlkezelő Suite egy Python alapú, moduláris rendszer, amely külön
 - **Médiafájl-kezelő** – Képek, videók előnézete és törlése
 - **Hálózati eszközkereső** – Aktív eszközök felderítése LAN-on
 - **EXE Gyártó** – Python szkriptekből végrehajtható fájlok készítése
+- **EXE elemző** – DLL függőségi gráf megjelenítése,processz információk megjelenítése
+- **SQL Adatbázis Kezelő** – MSSQL és MySQL adatbázisok kezelése,táblák szerkesztése
 
 ---
 
@@ -41,6 +43,16 @@ A Szita Fájlkezelő Suite egy Python alapú, moduláris rendszer, amely külön
 - Digitális aláírás (PFX fájl)
 - Inno Setup alapú telepítőkészítés
 - GPU-gyorsítás, párhuzamosítás támogatás
+  
+### 📈 EXE Elemző 
+- DLL függőségi gráf megjelenítése
+- Valós idejű CPU és memóriahasználat monitorozás
+- Processz információk megjelenítése
+    
+### 🗄️SQL Adatbázis Kezelő
+- MSSQL és MySQL adatbázisok kezelése
+- Táblák és rekordok szerkesztése
+- Adatok exportálása CSV formátumba
 
 ---
 
@@ -50,7 +62,7 @@ A Szita Fájlkezelő Suite egy Python alapú, moduláris rendszer, amely külön
 - **GUI**: PyQt5
 - **Függőségek**:
   - `PyPDF2`, `python-docx`, `openpyxl`
-  - `psutil`, `GPUtil`, `PyQt5.QtMultimedia`
+  - `psutil`, `GPUtil`, `PyQt5.QtMultimedia` ...
 
 ---
 
@@ -58,26 +70,21 @@ A Szita Fájlkezelő Suite egy Python alapú, moduláris rendszer, amely külön
 
 ### Függőségek telepítése
 ```bash
-pip install -r requirements.txt
-Alkalmazás futtatása
  
 python sablon.py
 EXE fordítás PyInstaller-rel
  
 pyinstaller --noconfirm --onefile --windowed --icon "icon.ico" --upx-dir "upx" --name "Szita suite" \
 --add-data "egyes.py;." --add-data "kettes.py;." --add-data "harmas.py;." --add-data "negyes.py;." \
---add-data "otos.py;." \
+--add-data "otos.py;." --add-data "hatos.py;." --add-data "hetes.py;." \
+--hidden-import matplotlib.backends.backend_qt5agg --hidden-import matplotlib.backends.qt_compat \
+--hidden-import pefile --hidden-import numpy   --hidden import pyodbc  --hidden import mysql.connector \
 --hidden-import docx --hidden-import openpyxl --hidden-import PyPDF2 \
 --hidden-import PyQt5.QtMultimedia --hidden-import PyQt5.QtMultimediaWidgets \
 --hidden-import psutil --hidden-import GPUtil \
 --add-binary "PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia" \
 --clean "sablon.py"
-Képernyőképek
-Fájlkezelő	Médiafájlok
-	
 
-Fájlkereső	EXE Gyártó
-	
 
 Használati esetek
 Fájlrendszer tisztítás, karbantartás
@@ -102,50 +109,112 @@ Erőforrás-optimalizált megvalósítás
 Platformfüggetlen (Windows, macOS, Linux)
 
 🇬🇧 English Version
-Szita File Manager Suite 2025
-Overview
-Szita Suite is a modular Python-based toolset combining file operations, search, media handling, networking, and executable creation in a single unified interface.
+# Szit File Manager Suite 2025
 
-Modules:
+## Overview
+Szit File Manager Suite is a Python-based, modular system that combines various file management and networking tasks in a modern user interface. The application contains five main modules:
 
-File Manager
+- **File Manager** – Copy, manage duplicates, delete empty folders
+- **File Finder** – Content-based search in file formats
+- **Media File Manager** – Preview and delete images, videos
+- **Network Device Finder** – Detect active devices on LAN
+- **EXE Maker** – Create executable files from Python scripts
+- **EXE Analyzer** – Display DLL dependency graph, display process information
+- **SQL Database Manager** – Manage MSSQL and MySQL databases, edit tables
 
-File Search
+---
 
-Media Files
+## Main features
 
-Network Scanner
+### 📁 File Manager
+- Copy files between source and destination folders
+- Identify and delete duplicate files
+- Search for empty folders
+- Filter by file type (.py, .html, .js, etc.)
 
-EXE Builder
+### 🔍 File Finder
+- Search by `.docx`, `.xlsx`, `.pdf` content
+- Date filtering, file type exclusion
+- Export results to Excel
 
-Technologies:
-Python 3.10+, PyQt5, PyPDF2, openpyxl, python-docx, psutil, GPUtil
+### 🎞️ Media File Manager
+- Preview and delete images/videos
+- Built-in video player
+- Zoom in/out on images
+- Open with default app
 
-Install:
+### 🌐 Network Device Finder
+- ARP and ping based device discovery
+- Automatic identification of device types
+- Display MAC addresses, hostnames
+- Color-coded list
 
- 
-pip install -r requirements.txt
-python sablon.py
-Build EXE:
+### 🛠️ EXE Builder
+- Generate `.exe` from `.py` files
+- Digital signature (PFX file)
+- Inno Setup based installer creation
+- GPU acceleration, parallelization support
 
- 
-pyinstaller --onefile sablon.py [...options...]
-Use cases:
+### 📈 EXE Analyzer
+- Display DLL dependency graph
+- Real-time CPU and memory usage monitoring
+- Show process information
 
-Clean and manage file systems
+### 🗄️SQL Database Manager
+- Manage MSSQL and MySQL databases
+- Edit tables and records
+- Export data to CSV format
 
-Search document collections
+---
 
-Preview and delete media
+## Technology background
 
-Scan LAN devices
+- **Language**: Python 3.10+
+- **GUI**: PyQt5
+- **Dependencies**:
+- `PyPDF2`, `python-docx`, `openpyxl`
+- `psutil`, `GPUtil`, `PyQt5.QtMultimedia` ...
 
-Build signed EXE installers from Python
+---
 
-Features:
+## Installation and execution
 
-Dark UI, responsive design
+### Installing dependencies
+```bash
 
-Multithreading, GPU optimization
+python template.py
 
-Cross-platform (Windows/macOS/Linux)
+EXE compilation with PyInstaller
+
+pyinstaller --noconfirm --onefile --windowed --icon "icon.ico" --upx-dir "upx" --name "Sieve suite" \
+--add-data "single.py;." --add-data "two.py;." --add-data "harmas.py;." --add-data "four.py;." \
+--add-data "otos.py;." --add-data "six.py;." --add-data "hetes.py;." \
+--hidden-import matplotlib.backends.backend_qt5agg --hidden-import matplotlib.backends.qt_compat \
+--hidden-import pefile --hidden-import numpy --hidden import pyodbc --hidden import mysql.connector \
+--hidden-import docx --hidden-import openpyxl --hidden-import PyPDF2 \
+--hidden-import PyQt5.QtMultimedia --hidden-import PyQt5.QtMultimediaWidgets \
+--hidden-import psutil --hidden-import GPUtil \
+--add-binary "PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia" \
+--clean "sablon.py"
+
+Use cases
+File system cleaning, maintenance
+
+Quick scanning of document collections
+
+Preview, quick management of media files
+
+Network tools mapping
+
+Compile Python applications to .exe format
+
+Features
+Dark theme
+
+Responsive PyQt5 interface
+
+Multithreaded operation
+
+Resource-optimized implementation
+
+Platform-independent (Windows, macOS, Linux)
