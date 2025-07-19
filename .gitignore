@@ -1,0 +1,22 @@
+# Egy konkrét fájl kizárása
+#jelszavak.txt
+
+# Egy mappa kizárása
+#secret_folder/
+dist/
+build/
+Output/
+*.iss
+*.spec
+*.json
+# Minden .log fájl kizárása
+*.log
+
+# IDE fájlok (pl. VSCode, IntelliJ)
+#.vscode/
+#.idea/
+
+# Python cache fájlok
+__pycache__/
+*.pyc
+mysql_worker.py

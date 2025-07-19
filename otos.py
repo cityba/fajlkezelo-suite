@@ -216,7 +216,12 @@ class BuildWorker(QThread):
                     return False
         
         cmd = [python_exe, '-m', 'PyInstaller', os.path.basename(script)]
-        cmd += ['--name', name, '--noconfirm','--windowed', f'--{build_mode}',  '--clean']
+        cmd += ['--name', name, '--noconfirm',  f'--{build_mode}',  '--clean']
+        
+        # Új: Konzol elrejtése (windowed) opció hozzáadása
+        if self.app.windowed_mode:
+            cmd += ['--windowed']
+            self.log_signal.emit("  ➕ Konzol elrejtése (windowed)", "green")
         
         if self.app.auto_hidden_import:
             self.log_signal.emit("🔍 Automatikus hidden import keresés...", "yellow")
@@ -580,10 +585,14 @@ class BuildApp(QWidget):
             "gpu_acceleration": QCheckBox("GPU gyorsítás (ha elérhető)"),
             "parallel_processing": QCheckBox("Párhuzamos feldolgozás"),
             "auto_hidden_import": QCheckBox("Automatikus hidden import keresés"),
-            "auto_other_files": QCheckBox("Automatikus más fájlok felismerése")
+            "auto_other_files": QCheckBox("Automatikus más fájlok felismerése"),
+            # Új: Konzol elrejtése (windowed) opció
+            "windowed_mode": QCheckBox("Konzol elrejtése (windowed)")
         }
+        # Alapértelmezett pipálások
         self.performance_options["auto_hidden_import"].setChecked(True)
         self.performance_options["auto_other_files"].setChecked(True)
+        self.performance_options["windowed_mode"].setChecked(True)  # Alapértelmezetten pipálva
         
         row = 0
         
@@ -712,6 +721,7 @@ class BuildApp(QWidget):
         self.parallel_processing = True
         self.auto_hidden_import = True
         self.auto_other_files = True
+        self.windowed_mode = True  # Új: Konzol elrejtése opció
 
     def set_performance_theme(self):
         palette = QPalette()
@@ -837,6 +847,8 @@ class BuildApp(QWidget):
         self.parallel_processing = self.performance_options["parallel_processing"].isChecked()
         self.auto_hidden_import = self.performance_options["auto_hidden_import"].isChecked()
         self.auto_other_files = self.performance_options["auto_other_files"].isChecked()
+        # Új: Konzol elrejtése opció
+        self.windowed_mode = self.performance_options["windowed_mode"].isChecked()
         
         self.log_message(f"=== TELJESÍTMÉNY BEÁLLÍTÁSOK ===", "yellow")
         self.log_message(f"Magas CPU prioritás: {'Igen' if self.high_priority else 'Nem'}", "default")
@@ -845,6 +857,7 @@ class BuildApp(QWidget):
         self.log_message(f"Párhuzamos feldolgozás: {'Igen' if self.parallel_processing else 'Nem'}", "default")
         self.log_message(f"Automatikus hidden import: {'Igen' if self.auto_hidden_import else 'Nem'}", "default")
         self.log_message(f"Automatikus fájl felismerés: {'Igen' if self.auto_other_files else 'Nem'}", "default")
+        self.log_message(f"Konzol elrejtése (windowed): {'Igen' if self.windowed_mode else 'Nem'}", "default")  # Új
         self.log_message(f"Build mód: {self.fields['build_mode'].currentText()}", "default")
         
         self.save_settings()

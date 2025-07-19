@@ -84,11 +84,6 @@ class DatabaseBrowser(QWidget):
 
     def get_mysql_worker_path(self):
         """Visszaadja a MySQL worker szkript elérési útját"""
-        # Ha EXE-ből futunk, az alkalmazás mappáját használjuk
-        #if getattr(sys, 'frozen', False):
-        #    base_dir = os.path.dirname(sys.executable)
-        #    return os.path.join(base_dir, "mysql_worker.py")
-        # Pythonból futtatáskor az app adatkönyvtár
         return os.path.join(self.app_data_dir, "mysql_worker.py")
 
     def load_profiles(self):
@@ -119,7 +114,6 @@ class DatabaseBrowser(QWidget):
     
     def create_mysql_worker_script(self):
         """Létrehozza a MySQL worker szkriptet az alkalmazás adatkönyvtárában"""
-        # Ha már létezik, nem kell létrehozni
         if os.path.exists(self.MYSQL_WORKER_SCRIPT):
             return
         
@@ -155,7 +149,7 @@ def run_command(settings, command, *args):
         
         elif command == 'get_table_data':
             table_name = args[0]
-            cursor.execute(f"SELECT * FROM `{table_name}` LIMIT 500")
+            cursor.execute(f"SELECT * FROM `{table_name}` ")
             columns = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
             
@@ -291,15 +285,12 @@ if __name__ == "__main__":
 
     def find_system_python(self):
         """Megkeresi a rendszerbeli Python elérési útját"""
-        # Próbálkozás a PATH-ból
         for path in os.environ["PATH"].split(os.pathsep):
             python_path = os.path.join(path, "python.exe")
             if os.path.isfile(python_path):
                 return python_path
         
-        # Platform-specifikus keresés
         if platform.system() == "Windows":
-            # Gyakori telepítési helyek
             for version in ["3.11", "3.10", "3.9", "3.8"]:
                 paths = [
                     f"C:\\Python{version}\\python.exe",
@@ -310,7 +301,6 @@ if __name__ == "__main__":
                     if os.path.isfile(path):
                         return path
         
-        # Regisztrációs adatbázis keresése Windows-on
         try:
             with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Python\PythonCore") as key:
                 for i in range(winreg.QueryInfoKey(key)[0]):
@@ -349,27 +339,19 @@ if __name__ == "__main__":
 
         cmd_args = [settings_file, command] + list(args)
         
-        # Környezet detektálása és megfelelő Python interpreter kiválasztása
         if getattr(sys, 'frozen', False):
-            # EXE környezet - rendszerbeli Python keresése
             python_exe = self.find_system_python()
             if not python_exe:
                 QMessageBox.critical(self, "Hiba", "Nem található Python interpreter!")
                 return None
             
-            # EXE esetén csak a szkriptet és a paramétereket adjuk át
             self.mysql_process.start(python_exe, [self.MYSQL_WORKER_SCRIPT] + cmd_args)
         else:
-            # Normál Python környezet
             self.mysql_process.start(sys.executable, [self.MYSQL_WORKER_SCRIPT] + cmd_args)
         
-        # Várakozás a folyamat befejezésére (max 30 másodperc)
-        if not self.mysql_process.waitForFinished(30000):
-             
+        if not self.mysql_process.waitForFinished(10000):
             QMessageBox.critical(self, "Időtúllépés", "A MySQL művelet túl sokáig tartott.")
             return None
-        
-         
         
         try:
             result = json.loads(self.textst)
@@ -386,9 +368,6 @@ if __name__ == "__main__":
  
 
     def handle_mysql_result(self, exit_code, exit_status):
-        """Feldolgozza a MySQL folyamat eredményét"""
-         
-        
         if exit_status != QProcess.NormalExit or exit_code != 0:
             error = self.mysql_process.readAllStandardError().data().decode('utf-8')
             QMessageBox.critical(self, "Folyamat Hiba", 
@@ -397,10 +376,8 @@ if __name__ == "__main__":
                                 f"Hibaüzenet: {error}")
 
     def apply_styles(self):
-        # Modern stílus alkalmazása
         QApplication.setStyle(QStyleFactory.create("Fusion"))
         
-        # Színpaletta beállítása
         palette = QPalette()
         palette.setColor(QPalette.Window, QColor(240, 240, 240))
         palette.setColor(QPalette.WindowText, QColor(0, 0, 0))
@@ -416,7 +393,6 @@ if __name__ == "__main__":
         palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
         self.setPalette(palette)
         
-        # Általános stílusok
         self.setStyleSheet("""
             QWidget {
                 font-family: 'Segoe UI', Arial, sans-serif;
@@ -456,8 +432,8 @@ if __name__ == "__main__":
                 background-color: #e68a00;
             }
             QLabel {
-                font-weight: bold;
-                color: #333333;
+                font-weight: bold;                 
+                 color:white;
             }
             QListWidget, QTreeWidget {
                 background-color: white;
@@ -476,6 +452,13 @@ if __name__ == "__main__":
             QSplitter::handle {
                 background-color: #cccccc;
             }
+            QMessageBox {
+            background-color: white;
+            }
+            QMessageBox QLabel {
+                color: black;
+            }
+             
         """)
 
     def init_ui(self):
@@ -527,18 +510,19 @@ if __name__ == "__main__":
         splitter = QSplitter(Qt.Horizontal)
         splitter.setChildrenCollapsible(False)
         
-        # Táblalista
+        # Táblalista (most már QTreeWidget)
         tables_widget = QWidget()
         tables_layout = QVBoxLayout(tables_widget)
         tables_layout.setContentsMargins(0, 0, 0, 0)
         
-        tables_label = QLabel("Táblák")
+        tables_label = QLabel("Adatbázis struktúra")
         tables_label.setFont(QFont("Arial", 9, QFont.Bold))
         tables_layout.addWidget(tables_label)
         
-        self.table_list = QListWidget()
-        self.table_list.itemSelectionChanged.connect(self.table_selected)
-        tables_layout.addWidget(self.table_list)
+        self.table_tree = QTreeWidget()
+        self.table_tree.setHeaderHidden(True)
+        self.table_tree.itemSelectionChanged.connect(self.table_selected)
+        tables_layout.addWidget(self.table_tree)
         
         splitter.addWidget(tables_widget)
         
@@ -556,7 +540,7 @@ if __name__ == "__main__":
         self.data_tree.setContextMenuPolicy(Qt.CustomContextMenu)
         self.data_tree.customContextMenuRequested.connect(self.show_context_menu)
         self.data_tree.itemDoubleClicked.connect(self.edit_cell)
-        self.data_tree.setSortingEnabled(True)  # Oszlop rendezés engedélyezése
+        self.data_tree.setSortingEnabled(True)
         data_layout.addWidget(self.data_tree)
         
         splitter.addWidget(data_widget)
@@ -584,7 +568,6 @@ if __name__ == "__main__":
                 
             engine = self.db_settings["engine"]
             
-            # MySQL esetén külön folyamatban csatlakozunk
             if engine == "MySQL":
                 result = self.run_mysql_command("connect")
                 if result is None:
@@ -595,18 +578,15 @@ if __name__ == "__main__":
                 self.load_table_list()
                 return True
             
-            # MSSQL esetén normál csatlakozás
             try:
                 self.status_label.setText("Kapcsolódás az adatbázishoz...")
                 QApplication.processEvents()
                 
                 server = self.db_settings["server"]
                 
-                # Kiszolgáló név formázása
                 if "\\" in server and not server.startswith("."):
                     server = f".\\{server.split('\\')[-1]}"
                 
-                # Windows hitelesítés támogatása
                 if self.db_settings.get("windows_auth", False):
                     conn_str = (
                         f"DRIVER={{SQL Server}};"
@@ -648,70 +628,117 @@ if __name__ == "__main__":
             QMessageBox.critical(self, "Váratlan hiba", str(e))
             return False
 
+    def format_table_name(self, table_name):
+        """Formázza a táblanevet az adatbázis motor szerint"""
+        if self.db_settings["engine"] == "MSSQL":
+            if '.' in table_name:
+                schema, table = table_name.split('.', 1)
+                return f"[{schema}].[{table}]"
+            else:
+                return f"[dbo].[{table_name}]"
+        elif self.db_settings["engine"] == "MySQL":
+            return f"`{table_name}`"
+
     def load_table_list(self):
         if self.db_settings["engine"] == "MySQL":
-            # MySQL esetén külön folyamatban töltjük be a táblákat
             result = self.run_mysql_command("get_tables")
             if result is None:
                 return
                 
             tables = result.get('tables', [])
-            self.table_list.clear()
-            self.table_list.addItems(tables)
-            self.status_label.setText(f"{len(tables)} tábla betöltve")
+            self.table_tree.clear()
             
-            # Automatikusan kiválasztjuk az első táblát
-            if tables:
-                self.table_list.setCurrentRow(0)
+            # MySQL esetén nincsenek sémák, csak táblák
+            root_item = QTreeWidgetItem(["Táblák"])
+            self.table_tree.addTopLevelItem(root_item)
+            
+            for table in tables:
+                table_item = QTreeWidgetItem([table])
+                table_item.setData(0, Qt.UserRole, table)  # Táblanév tárolása
+                root_item.addChild(table_item)
+            
+            root_item.setExpanded(True)
+            self.status_label.setText(f"{len(tables)} tábla betöltve")
             return
         
-        # MSSQL esetén normál módon
+        # MSSQL esetén sémák és táblák
         if not self.conn or not self.cursor:
             return
             
-        self.table_list.clear()
         try:
-            self.status_label.setText("Táblalista betöltése...")
+            self.status_label.setText("Adatbázis struktúra betöltése...")
             QApplication.processEvents()
             
-            # Rendszertáblák kizárása
+            # Séma és táblák lekérdezése
             self.cursor.execute("""
-                SELECT name 
-                FROM sys.tables 
-                WHERE name NOT IN (
+                SELECT 
+                    s.name AS schema_name, 
+                    t.name AS table_name
+                FROM sys.tables t
+                INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
+                WHERE t.name NOT IN (
                     'sysdiagrams', 'dtproperties', 
                     'MSreplication_options', 'spt_fallback_db'
                 )
-                ORDER BY name
+                ORDER BY s.name, t.name
             """)
-            tables = [row[0] for row in self.cursor.fetchall()]
+            rows = self.cursor.fetchall()
             
-            self.table_list.addItems(tables)
-            self.status_label.setText(f"{len(tables)} tábla betöltve")
+            # Séma szerinti csoportosítás
+            schema_dict = {}
+            for row in rows:
+                schema_name = row.schema_name
+                table_name = row.table_name
+                if schema_name not in schema_dict:
+                    schema_dict[schema_name] = []
+                schema_dict[schema_name].append(table_name)
             
-            # Automatikusan kiválasztjuk az első táblát
-            if tables:
-                self.table_list.setCurrentRow(0)
+            self.table_tree.clear()
+            
+            # Gyökér elem létrehozása
+            root_item = QTreeWidgetItem(["Sémák"])
+            self.table_tree.addTopLevelItem(root_item)
+            
+            # Séma elemek hozzáadása
+            for schema, tables in schema_dict.items():
+                schema_item = QTreeWidgetItem([schema])
+                root_item.addChild(schema_item)
+                
+                # Táblák hozzáadása a séma alá
+                for table in tables:
+                    full_name = f"{schema}.{table}"
+                    table_item = QTreeWidgetItem([table])
+                    table_item.setData(0, Qt.UserRole, full_name)  # Teljes név tárolása
+                    schema_item.addChild(table_item)
+            
+            root_item.setExpanded(True)
+            self.status_label.setText(f"{len(rows)} tábla betöltve {len(schema_dict)} sémában")
                 
         except Exception as e:
-            error_msg = f"Hiba a táblalista betöltésekor: {str(e)}"
+            error_msg = f"Hiba a struktúra betöltésekor: {str(e)}"
             self.status_label.setText(error_msg)
             QMessageBox.critical(
                 self, 
-                "Táblalista hiba", 
+                "Struktúra betöltési hiba", 
                 error_msg + "\n\nKérlek ellenőrizd az adatbázis kapcsolatot."
             )
 
     def table_selected(self):
-        selected = self.table_list.selectedItems()
+        selected = self.table_tree.selectedItems()
         if not selected:
             return
             
-        table_name = selected[0].text()
+        item = selected[0]
+        
+        # Csak táblaelemeket kezelünk (amiknek van UserRole adatuk)
+        table_name = item.data(0, Qt.UserRole)
+        if not table_name:
+            return
+            
         self.current_table = table_name
         self.table_label.setText(f"Tábla: {table_name}")
+        self.table_label.setStyleSheet("color:white;")
         
-        # MySQL esetén külön folyamatban töltjük be az adatokat
         if self.db_settings["engine"] == "MySQL":
             result = self.run_mysql_command("get_table_data", table_name)
             if result is None:
@@ -744,7 +771,7 @@ if __name__ == "__main__":
             self.status_label.setText(f"{table_name}: {len(rows)} rekord betöltve")
             return
         
-        # MSSQL esetén normál adatbetöltés
+        # MSSQL esetén
         if not self.conn or not self.cursor:
             return
             
@@ -752,11 +779,10 @@ if __name__ == "__main__":
             self.status_label.setText(f"{table_name} adatainak betöltése...")
             QApplication.processEvents()
             
-            # Tábla nevének kezelése
-            safe_table_name = f"[{table_name}]"
+            # Tábla nevének formázása
+            safe_table_name = self.format_table_name(table_name)
             
-            # Adatbázis motorfüggő LIMIT záradék
-            self.cursor.execute(f"SELECT TOP 500 * FROM {safe_table_name}")
+            self.cursor.execute(f"SELECT   * FROM {safe_table_name}")
             
             columns = [desc[0] for desc in self.cursor.description]
             self.aktualis_tabla_oszlopai = columns
@@ -764,7 +790,7 @@ if __name__ == "__main__":
             self.data_tree.clear()
             self.data_tree.setColumnCount(len(columns))
             self.data_tree.setHeaderLabels(columns)
-            self.data_tree.setSortingEnabled(True)  # Rendezés engedélyezése
+            self.data_tree.setSortingEnabled(True)
             
             rows = self.cursor.fetchall()
             for row in rows:
@@ -783,7 +809,6 @@ if __name__ == "__main__":
                 self.data_tree.header().setSectionResizeMode(i, QHeaderView.Interactive)
                 self.data_tree.header().resizeSection(i, 150)
                 
-            # Rendezés alaphelyzetbe állítása
             self.data_tree.sortByColumn(0, Qt.AscendingOrder)
                 
             self.status_label.setText(f"{table_name}: {len(rows)} rekord betöltve")
@@ -813,10 +838,9 @@ if __name__ == "__main__":
 
     def delete_row(self):
         item = self.data_tree.currentItem()
-        if not item or not self.table_list.selectedItems():
+        if not item or not self.current_table:
             return
             
-        table_name = self.table_list.selectedItems()[0].text()
         pk_col = self.data_tree.headerItem().text(0)
         pk_value = item.text(0)
         
@@ -836,12 +860,10 @@ if __name__ == "__main__":
                 QApplication.processEvents()
                 
                 if self.db_settings["engine"] == "MySQL":
-                    # MySQL esetén külső folyamat
-                    result = self.run_mysql_command("delete_row", table_name, pk_col, pk_value)
+                    result = self.run_mysql_command("delete_row", self.current_table, pk_col, pk_value)
                     if result is None:
                         return
                     
-                    # Ha sikeres, eltávolítjuk a sorból
                     index = self.data_tree.indexOfTopLevelItem(item)
                     if index >= 0:
                         self.data_tree.takeTopLevelItem(index)
@@ -849,18 +871,13 @@ if __name__ == "__main__":
                     self.status_label.setText(f"Sor törölve: {pk_col}={pk_value}")
                     return
                 
-                # Tábla nevének kezelése
-                safe_table_name = f"[{table_name}]" if self.db_settings["engine"] == "MSSQL" else f"`{table_name}`"
-                safe_pk_col = f"[{pk_col}]" if self.db_settings["engine"] == "MSSQL" else f"`{pk_col}`"
+                # MSSQL esetén
+                safe_table_name = self.format_table_name(self.current_table)
+                safe_pk_col = f"[{pk_col}]"
                 
-                if self.db_settings["engine"] == "MSSQL":
-                    self.cursor.execute(f"DELETE FROM {safe_table_name} WHERE {safe_pk_col} = ?", (pk_value,))
-                else:
-                    self.cursor.execute(f"DELETE FROM {safe_table_name} WHERE {safe_pk_col} = %s", (pk_value,))
-                    
+                self.cursor.execute(f"DELETE FROM {safe_table_name} WHERE {safe_pk_col} = ?", (pk_value,))
                 self.conn.commit()
                 
-                # Remove from tree without reloading entire table
                 index = self.data_tree.indexOfTopLevelItem(item)
                 if index >= 0:
                     self.data_tree.takeTopLevelItem(index)
@@ -871,12 +888,11 @@ if __name__ == "__main__":
                 QMessageBox.critical(self, "Hiba", str(e))
 
     def edit_cell(self, item, column):
-        if not self.table_list.selectedItems():
+        if not self.current_table:
             return
             
         old_value = item.text(column)
         col_name = self.data_tree.headerItem().text(column)
-        table_name = self.current_table
         pk_col = self.data_tree.headerItem().text(0)
         pk_value = item.text(0)
         
@@ -892,32 +908,23 @@ if __name__ == "__main__":
                 QApplication.processEvents()
                 
                 if self.db_settings["engine"] == "MySQL":
-                    # MySQL esetén külső folyamat
-                    result = self.run_mysql_command("update_cell", table_name, pk_col, pk_value, col_name, new_value)
+                    result = self.run_mysql_command("update_cell", self.current_table, pk_col, pk_value, col_name, new_value)
                     if result is None:
                         return
                     
-                    # Ha sikeres, frissítjük a cellát
                     item.setText(column, new_value)
                     self.status_label.setText("Cella frissítve")
                     return
                 
-                # Tábla nevének kezelése
-                safe_table_name = f"[{table_name}]" if self.db_settings["engine"] == "MSSQL" else f"`{table_name}`"
-                safe_col_name = f"[{col_name}]" if self.db_settings["engine"] == "MSSQL" else f"`{col_name}`"
-                safe_pk_col = f"[{pk_col}]" if self.db_settings["engine"] == "MSSQL" else f"`{pk_col}`"
+                # MSSQL esetén
+                safe_table_name = self.format_table_name(self.current_table)
+                safe_col_name = f"[{col_name}]"
+                safe_pk_col = f"[{pk_col}]"
                 
-                if self.db_settings["engine"] == "MSSQL":
-                    self.cursor.execute(
-                        f"UPDATE {safe_table_name} SET {safe_col_name} = ? WHERE {safe_pk_col} = ?",
-                        (new_value, pk_value)
-                    )
-                else:
-                    self.cursor.execute(
-                        f"UPDATE {safe_table_name} SET {safe_col_name} = %s WHERE {safe_pk_col} = %s",
-                        (new_value, pk_value)
-                    )
-                    
+                self.cursor.execute(
+                    f"UPDATE {safe_table_name} SET {safe_col_name} = ? WHERE {safe_pk_col} = ?",
+                    (new_value, pk_value)
+                )
                 self.conn.commit()
                 item.setText(column, new_value)
                 self.status_label.setText("Cella frissítve")
@@ -927,11 +934,10 @@ if __name__ == "__main__":
 
     def fix_current_record(self):
         item = self.data_tree.currentItem()
-        if not item or not self.table_list.selectedItems():
+        if not item or not self.current_table:
             QMessageBox.warning(self, "Figyelmeztetés", "Nincs kiválasztott rekord!")
             return
             
-        table_name = self.table_list.selectedItems()[0].text()
         pk_col = self.data_tree.headerItem().text(0)
         pk_value = item.text(0)
         
@@ -940,24 +946,19 @@ if __name__ == "__main__":
             return
             
         try:
-            # Tábla nevének kezelése
-            safe_table_name = f"[{table_name}]" if self.db_settings["engine"] == "MSSQL" else f"`{table_name}`"
-            safe_pk_col = f"[{pk_col}]" if self.db_settings["engine"] == "MSSQL" else f"`{pk_col}`"
-            
             if self.db_settings["engine"] == "MySQL":
-                # MySQL esetén külső folyamat
-                result = self.run_mysql_command("execute_query", f"SELECT * FROM `{table_name}` WHERE `{pk_col}` = '{pk_value}'")
+                result = self.run_mysql_command("execute_query", f"SELECT * FROM `{self.current_table}` WHERE `{pk_col}` = '{pk_value}'")
                 if result is None or 'rows' not in result or not result['rows']:
                     QMessageBox.warning(self, "Hiba", "A rekord nem található!")
                     return
                 
                 record = result['rows'][0]
             else:
-                if self.db_settings["engine"] == "MSSQL":
-                    self.cursor.execute(f"SELECT * FROM {safe_table_name} WHERE {safe_pk_col} = ?", (pk_value,))
-                else:
-                    self.cursor.execute(f"SELECT * FROM {safe_table_name} WHERE {safe_pk_col} = %s", (pk_value,))
-                    
+                # MSSQL esetén
+                safe_table_name = self.format_table_name(self.current_table)
+                safe_pk_col = f"[{pk_col}]"
+                
+                self.cursor.execute(f"SELECT * FROM {safe_table_name} WHERE {safe_pk_col} = ?", (pk_value,))
                 record = self.cursor.fetchone()
                 if not record:
                     QMessageBox.warning(self, "Hiba", "A rekord nem található!")
@@ -981,7 +982,7 @@ if __name__ == "__main__":
                     value = record[i] if record[i] is not None else ""
                 editor = QLineEdit(str(value))
                 if col_name == pk_col:
-                    editor.setEnabled(False)  # Elsődleges kulcs nem szerkeszthető
+                    editor.setEnabled(False)
                 form_layout.addWidget(editor, i, 1)
                 editors[col_name] = editor
                 
@@ -990,7 +991,7 @@ if __name__ == "__main__":
             btn_layout = QHBoxLayout()
             btn_save = QPushButton("Mentés")
             btn_save.setObjectName("info")
-            btn_save.clicked.connect(lambda: self.save_record_changes(dialog, editors, item, pk_col, table_name, pk_value))
+            btn_save.clicked.connect(lambda: self.save_record_changes(dialog, editors, item, pk_col, pk_value))
             
             btn_cancel = QPushButton("Mégse")
             btn_cancel.setObjectName("danger")
@@ -1005,7 +1006,7 @@ if __name__ == "__main__":
             self.status_label.setText("Hiba: " + str(e))
             QMessageBox.critical(self, "Hiba", str(e))
 
-    def save_record_changes(self, dialog, editors, item, pk_col, table_name, pk_value):
+    def save_record_changes(self, dialog, editors, item, pk_col, pk_value):
         try:
             update_parts = []
             params = []
@@ -1018,7 +1019,7 @@ if __name__ == "__main__":
                     new_value = editor.text()
                     updates[col_name] = new_value
                 
-                result = self.run_mysql_command("update_record", table_name, pk_col, pk_value, updates)
+                result = self.run_mysql_command("update_record", self.current_table, pk_col, pk_value, updates)
                 if result is None:
                     return
                 
@@ -1031,31 +1032,22 @@ if __name__ == "__main__":
                 dialog.accept()
                 return
             
+            # MSSQL esetén
             for col_name, editor in editors.items():
                 new_value = editor.text()
                 if col_name == pk_col:
                     continue
                     
-                # Tábla nevének kezelése
-                safe_col_name = f"[{col_name}]" if self.db_settings["engine"] == "MSSQL" else f"`{col_name}`"
-                
-                if self.db_settings["engine"] == "MSSQL":
-                    update_parts.append(f"{safe_col_name} = ?")
-                else:
-                    update_parts.append(f"{safe_col_name} = %s")
+                safe_col_name = f"[{col_name}]"
+                update_parts.append(f"{safe_col_name} = ?")
                 params.append(new_value)
             
             params.append(pk_value)
             
-            safe_table_name = f"[{table_name}]" if self.db_settings["engine"] == "MSSQL" else f"`{table_name}`"
-            safe_pk_col = f"[{pk_col}]" if self.db_settings["engine"] == "MSSQL" else f"`{pk_col}`"
+            safe_table_name = self.format_table_name(self.current_table)
+            safe_pk_col = f"[{pk_col}]"
             
-            update_query = f"UPDATE {safe_table_name} SET {', '.join(update_parts)} WHERE {safe_pk_col} = "
-            
-            if self.db_settings["engine"] == "MSSQL":
-                update_query += "?"
-            else:
-                update_query += "%s"
+            update_query = f"UPDATE {safe_table_name} SET {', '.join(update_parts)} WHERE {safe_pk_col} = ?"
             
             self.status_label.setText("Rekord frissítése...")
             QApplication.processEvents()
@@ -1075,25 +1067,22 @@ if __name__ == "__main__":
             QMessageBox.critical(dialog, "Hiba", str(e))
 
     def drop_table(self):
-        selected = self.table_list.selectedItems()
-        if not selected:
+        if not self.current_table:
             return
             
-        table_name = selected[0].text()
         reply = QMessageBox.question(
             self, "Megerősítés",
-            f"Biztos törlöd a(z) '{table_name}' táblát?",
+            f"Biztos törlöd a(z) '{self.current_table}' táblát?",
             QMessageBox.Yes | QMessageBox.No
         )
         
         if reply == QMessageBox.Yes:
             try:
-                self.status_label.setText(f"{table_name} tábla törlése...")
+                self.status_label.setText(f"{self.current_table} tábla törlése...")
                 QApplication.processEvents()
                 
                 if self.db_settings["engine"] == "MySQL":
-                    # MySQL esetén külső folyamat
-                    result = self.run_mysql_command("drop_table", table_name)
+                    result = self.run_mysql_command("drop_table", self.current_table)
                     if result is None:
                         return
                     
@@ -1101,12 +1090,11 @@ if __name__ == "__main__":
                     self.data_tree.clear()
                     self.table_label.setText("Nincs kiválasztott tábla")
                     self.current_table = ""
-                    self.status_label.setText(f"Tábla törölve: {table_name}")
+                    self.status_label.setText(f"Tábla törölve: {self.current_table}")
                     return
                 
-                # Tábla nevének kezelése
-                safe_table_name = f"[{table_name}]" if self.db_settings["engine"] == "MSSQL" else f"`{table_name}`"
-                
+                # MSSQL esetén
+                safe_table_name = self.format_table_name(self.current_table)
                 self.cursor.execute(f"DROP TABLE {safe_table_name}")
                 self.conn.commit()
                 
@@ -1115,7 +1103,7 @@ if __name__ == "__main__":
                 self.table_label.setText("Nincs kiválasztott tábla")
                 self.current_table = ""
                 
-                self.status_label.setText(f"Tábla törölve: {table_name}")
+                self.status_label.setText(f"Tábla törölve: {self.current_table}")
             except Exception as e:
                 self.status_label.setText("Hiba: " + str(e))
                 QMessageBox.critical(self, "Hiba", str(e))
@@ -1141,11 +1129,8 @@ if __name__ == "__main__":
             self.status_label.setText("CSV exportálás...")
             QApplication.processEvents()
             
-            # MySQL esetén külön folyamatban exportálunk
             if self.db_settings["engine"] == "MySQL":
-                # Tábla nevének kezelése
                 safe_table_name = f"`{self.current_table}`"
-                
                 result = self.run_mysql_command("execute_query", f"SELECT * FROM {safe_table_name}")
                 if result is None:
                     return
@@ -1163,10 +1148,8 @@ if __name__ == "__main__":
                 QMessageBox.information(self, "Siker", f"Adatok sikeresen exportálva: {file_path}")
                 return
             
-            # MSSQL esetén normál exportálás
-            # Tábla nevének kezelése
-            safe_table_name = f"[{self.current_table}]"
-            
+            # MSSQL esetén
+            safe_table_name = self.format_table_name(self.current_table)
             self.cursor.execute(f"SELECT * FROM {safe_table_name}")
             columns = [desc[0] for desc in self.cursor.description]
             rows = self.cursor.fetchall()
