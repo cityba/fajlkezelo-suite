@@ -67,7 +67,8 @@ A Szita Fájlkezelő Suite egy Python alapú, moduláris rendszer, amely külön
 ---
 
 ## Telepítés és futtatás
-
+windows
+Output mappába lévő exe fájl, letöltés, telepítés
 ### Függőségek telepítése
 ```bash
  
