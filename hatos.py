@@ -278,13 +278,14 @@ class ProcessMonitorApp(QMainWindow):
         self.proc_combo.setEditable(False)
         control_layout.addWidget(self.proc_combo, 0, 1)
         self.proc_combo.setStyleSheet("""
-                QComboBox {
-                    color: black; 
-                }
                 QComboBox QAbstractItemView {
-                    color: black;  
-                    
-                }
+                background-color: #1A1A1A;     
+                color: #DDD;                      
+                selection-background-color: #000; 
+                selection-color: #DDD;             
+                border: 1px solid #444;
+            }
+                 
             """)
                     
         refresh_btn = QPushButton("Frissítés")
@@ -310,7 +311,11 @@ class ProcessMonitorApp(QMainWindow):
         self.depth_spin.setRange(1, 5)
         self.depth_spin.setValue(2)
         control_layout.addWidget(self.depth_spin, 1, 1)
-        self.depth_spin.setStyleSheet(""" color: black; """)
+        self.depth_spin.setStyleSheet("""  QSpinBox  {
+                background-color: #1A1A1A;     
+                color: #DDD;                      
+                
+            } """)
         
         
         
@@ -321,7 +326,11 @@ class ProcessMonitorApp(QMainWindow):
         self.node_limit_spin.setRange(5, 100)
         self.node_limit_spin.setValue(20)
         control_layout.addWidget(self.node_limit_spin, 1, 3)
-        self.node_limit_spin.setStyleSheet(""" color: black;  """)
+        self.node_limit_spin.setStyleSheet("""  QSpinBox  {
+                background-color: #1A1A1A;     
+                color: #DDD;                      
+                
+            } """)
         
         self.start_btn = QPushButton("Start Monitorozás")
         self.start_btn.clicked.connect(self.start_auto_refresh)

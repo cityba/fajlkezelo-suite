@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QSize
 import platform
-
+ 
 # Import modules with error handling
 modules = {}
 module_names = ["egyes", "kettes", "harmas", "negyes", "otos", "hatos", "hetes", "nyolc"]
@@ -190,7 +190,7 @@ if __name__ == "__main__":
             
     
  
- #   --add-data egyes.py;.  --add-data kettes.py;.   --add-data harmas.py;.   --add-data negyes.py;.   --add-data otos.py;.    --add-data hatos.py;.  --add-data hetes.py;.  --add-data nyolc.py;. --hidden-import matplotlib.backends.backend_qt5agg --hidden-import matplotlib.backends.qt_compat  --hidden-import pefile --hidden-import numpy   --hidden-import pyodbc  --hidden-import mysql.connector --hidden-import docx   --hidden-import openpyxl   --hidden-import PyPDF2   --hidden-import PyQt5.QtMultimedia   --hidden-import PyQt5.QtMultimediaWidgets --hidden-import psutil --hidden-import GPUtil  --add-binary C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia  
+ #   --add-data egyes.py;.  --add-data kettes.py;.   --add-data harmas.py;.   --add-data negyes.py;.   --add-data otos.py;.    --add-data hatos.py;.  --add-data hetes.py;.  --add-data nyolc.py;. --hidden-import=PyQt5.QtNetwork --hidden-import=PyQt5.QtPrintSupport --hidden-import=appdirs --hidden-import matplotlib.backends.backend_qt5agg --hidden-import matplotlib.backends.qt_compat  --hidden-import pefile --hidden-import numpy   --hidden-import pyodbc  --hidden-import mysql.connector --hidden-import docx   --hidden-import openpyxl   --hidden-import PyPDF2   --hidden-import PyQt5.QtMultimedia   --hidden-import PyQt5.QtMultimediaWidgets --hidden-import psutil --hidden-import GPUtil  --add-binary C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia  
 
  
  

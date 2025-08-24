@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QApplication, QListWidget, QDialog, QDialogButtonBox,QListWidgetItem
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
-from PyQt5.QtGui import QColor, QPalette
+from PyQt5.QtGui import QColor, QPalette 
 import os
 import shutil
 import json
@@ -164,13 +164,17 @@ class BuildWorker(QThread):
         
         for root, dirs, files in os.walk(folder, topdown=True):
             # Kihagyjuk a nem kívánt mappákat
-            for dir_to_remove in ['.git', 'dist', 'Output', 'build']:
+            for dir_to_remove in ['.git', 'dist', 'Output', 'build', '__pycache__']:
                 if dir_to_remove in dirs:
                     dirs.remove(dir_to_remove)
-            
+             
             for file in files:
+                if file.endswith(('.iss', '.spec')):
+                    continue
+                
                 full_path = os.path.join(root, file)
                 rel_path = os.path.relpath(full_path, folder)
+                
                 
                 # Kihagyjuk a fő scriptet és az ikonfájlokat
                 if file == os.path.basename(self.app.fields["script_path"].text()):
@@ -226,7 +230,7 @@ class BuildWorker(QThread):
         if self.app.auto_hidden_import:
             self.log_signal.emit("🔍 Automatikus hidden import keresés...", "yellow")
             found_imports, missing_imports = self.analyze_hidden_imports(script)
-            
+            hidden_imports = set()
             self.log_signal.emit("🔍 Egyéb Python fájlok elemzése...", "blue")
             other_imports, other_missing = self.analyze_other_imports(folder)
             found_imports.extend(other_imports)
@@ -243,14 +247,17 @@ class BuildWorker(QThread):
                     time.sleep(0.1)
                 
                 if self.missing_imports_response:
-                    for imp in self.missing_imports_list:
-                        cmd += ['--hidden-import', imp]
-                        self.log_signal.emit(f"  ➕ {imp}", "green")
+                    hidden_imports.update(self.missing_imports_list)
+                     
             
-            if found_imports:
-                for imp in set(found_imports):
-                    cmd += ['--hidden-import', imp]
-                    self.log_signal.emit(f"  ➕ {imp}", "green")
+            hidden_imports.update(found_imports)
+
+            for imp in sorted(hidden_imports):  # sorted -> szép rendezett lista a logban
+                cmd += ['--hidden-import', imp]
+                self.log_signal.emit(f"  ➕ {imp}", "green")  
+                
+
+
         
         if self.app.auto_other_files:
             self.log_signal.emit("🔍 További fájlok keresése...", "yellow")
@@ -438,7 +445,13 @@ class BuildWorker(QThread):
             icon_dest = os.path.join(folder, 'icon.ico')
             if os.path.abspath(icon_path) != os.path.abspath(icon_dest):
                 shutil.copy(icon_path, icon_dest)
-        
+
+        png_path = self.app.fields["png_path"].text()
+        if png_path:
+            png_dest = os.path.join(folder, 'icon.png')
+            if os.path.abspath(png_path) != os.path.abspath(png_dest):
+                shutil.copy(png_path, png_dest)
+
         iss_file = os.path.join(folder, f'{name}.iss')
         
         build_mode = self.app.fields["build_mode"].currentText()
@@ -759,13 +772,21 @@ class BuildApp(QWidget):
                 color: #4CAF50;
                 font-weight: bold;
             }
-            QLineEdit, QComboBox {
+            QLineEdit,QComboBox{
                 background-color: #1A1A1A;
                 color: #DDD;
                 border: 1px solid #444;
                 border-radius: 3px;
                 padding: 5px;
                 selection-background-color: #2A82DA;
+            }
+            
+            QComboBox QAbstractItemView {
+                background-color: #1A1A1A;     
+                color: #DDD;                      
+                selection-background-color: #000; 
+                selection-color: #DDD;             
+                border: 1px solid #444;
             }
             QPushButton {
                 background-color: #444;
@@ -789,6 +810,25 @@ class BuildApp(QWidget):
             QLabel {
                 color: #AAA;
             }
+            QMessageBox {
+            background-color: #0A0A0A;
+        }
+        QMessageBox QLabel {
+            color: #FFFFFF;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 12px;
+        }
+        QMessageBox QPushButton {
+            background-color: #444;
+            color: white;
+            border-radius: 4px;
+            padding: 6px 12px;
+            border: 1px solid #555;
+        }
+        QMessageBox QPushButton:hover {
+            background-color: #555;
+            border: 1px solid #666;
+        }
         """)
 
     def log_message(self, message, color="default"):
@@ -816,9 +856,10 @@ class BuildApp(QWidget):
         path, _ = QFileDialog.getOpenFileName(self, "Válassz Python scriptet", "", "Python Files (*.py)")
         if path:
             self.fields["script_path"].setText(path)
-            if not self.fields["output_name"].text():
-                base = os.path.splitext(os.path.basename(path))[0]
-                self.fields["output_name"].setText(base)
+            # mindig a script mappanevét állítja be output_name-nek
+            folder_name = os.path.basename(os.path.dirname(path))
+            self.fields["output_name"].setText(folder_name)
+
 
     def browse_icon(self):
         path, _ = QFileDialog.getOpenFileName(self, "Válassz ICO fájlt", "", "ICO Files (*.ico)")

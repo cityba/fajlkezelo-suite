@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTreeWidget,
     QTreeWidgetItem, QFileDialog, QAbstractItemView, QHeaderView,
     QLabel,  QMessageBox,  QLineEdit, QFrame,
-    QDialog, QListWidget, QProgressBar 
+    QDialog, QListWidget, QProgressBar ,  QApplication
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QFont,  QBrush, QColor
@@ -628,3 +628,10 @@ class EmptyFolderManager(QDialog):
             
             if deleted > 0:
                 QMessageBox.information(self, "Siker", f"{deleted} mappa sikeresen törölve!")
+
+if __name__ == "__main__":
+    import sys
+    app = QApplication(sys.argv)
+    window = FileCopyApp()
+    window.show()
+    sys.exit(app.exec_())                

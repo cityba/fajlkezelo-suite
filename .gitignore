@@ -20,3 +20,4 @@ build/
 __pycache__/
 *.pyc
 mysql_worker.py
+hetesregi.py
