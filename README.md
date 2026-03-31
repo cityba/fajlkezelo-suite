@@ -75,17 +75,44 @@ Output mappába lévő exe fájl, letöltés, telepítés
 python sablon.py
 EXE fordítás PyInstaller-rel
  
-pyinstaller --noconfirm --onefile --windowed --icon "icon.ico" --upx-dir "upx" --name "Szita suite" \
---add-data "egyes.py;." --add-data "kettes.py;." --add-data "harmas.py;." --add-data "negyes.py;." \
---add-data "otos.py;." --add-data "hatos.py;." --add-data "hetes.py;." \
---add-data "nyolc.py;." --hidden-import=PyQt5.QtNetwork --hidden-import=PyQt5.QtPrintSupport --hidden-import=appdirs \ 
---hidden-import matplotlib.backends.backend_qt5agg --hidden-import matplotlib.backends.qt_compat \
---hidden-import pefile --hidden-import numpy   --hidden import pyodbc  --hidden import mysql.connector \
---hidden-import docx --hidden-import openpyxl --hidden-import PyPDF2 \
---hidden-import PyQt5.QtMultimedia --hidden-import PyQt5.QtMultimediaWidgets \
---hidden-import psutil --hidden-import GPUtil \
---add-binary "PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia" \
---clean "sablon.py"
+pyinstaller --noconfirm --onedir --windowed --clean `
+--name "Szita-suite" `
+--icon "C:\Users\ap\Documents\fajlkezelo-suite\icon.ico" `
+--upx-dir "D:\upx\upx-5.0.1-win64" `
+--add-data "egyes.py;." `
+--add-data "kettes.py;." `
+--add-data "harmas.py;." `
+--add-data "negyes.py;." `
+--add-data "otos.py;." `
+--add-data "hatos.py;." `
+--add-data "hetes.py;." `
+--add-data "hetesregi.py;." `
+--add-data "nyolc.py;." `
+--add-data "kilenc.py;." `
+--add-data "profiles.json;." `
+--add-data "C:/Users/ap/Documents/fajlkezelo-suite/icon.ico;." `
+--add-data "C:/Users/ap/Documents/fajlkezelo-suite/icon.png;." `
+--hidden-import=mysql.connector `
+--hidden-import=mysql.connector.locales.eng.client_error `
+--hidden-import=pyodbc `
+--hidden-import=PyQt5.QtNetwork `
+--hidden-import=PyQt5.QtPrintSupport `
+--hidden-import=PyQt5.QtMultimedia `
+--hidden-import=PyQt5.QtMultimediaWidgets `
+--hidden-import=matplotlib.backends.backend_qt5agg `
+--hidden-import=matplotlib.backends.qt_compat `
+--hidden-import=appdirs `
+--hidden-import=pefile `
+--hidden-import=numpy `
+--hidden-import=pandas `
+--hidden-import=docx `
+--hidden-import=openpyxl `
+--hidden-import=PyPDF2 `
+--hidden-import=psutil `
+--hidden-import=GPUtil `
+--collect-all mysql.connector `
+--collect-all pyodbc `
+"sablon.py"
 
 
 Használati esetek
