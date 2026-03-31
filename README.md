@@ -27,12 +27,12 @@ A Szita Fájlkezelő Suite egy Python alapú, moduláris rendszer, amely külön
 - Dátumszűrés, fájltípus kizárás
 - Eredmények exportja Excelbe
 
-### 📁🔍📁 Intelligens Mappa Összehasonlítás 
--A csomag legfejlettebb modulja, amely képes két könyvtárstruktúra teljes körű auditálására:
--Struktúra elemzése: Azonosítja a hiányzó mappákat és fájlokat mindkét oldalon.
--Bináris tartalomvizsgálat: Nem csak a fájlneveket nézi; a fájlok tartalmát bájt szinten hasonlítja össze (filecmp).
--Multi-Core teljesítmény: A fájltartalom ellenőrzése párhuzamosan, az összes rendelkezésre álló processzormagon fut (ProcessPoolExecutor), így több ezer fájl esetén is villámgyors.
--Részletes jelentés: Consolas betűtípussal formázott, átlátható naplót készít az eltérésekről.
+ ### 📁🔍📁 Intelligens Mappa Összehasonlítás 
+ -A csomag legfejlettebb modulja, amely képes két könyvtárstruktúra teljes körű auditálására:
+ -Struktúra elemzése: Azonosítja a hiányzó mappákat és fájlokat mindkét oldalon.
+ -Bináris tartalomvizsgálat: Nem csak a fájlneveket nézi; a fájlok tartalmát bájt szinten hasonlítja össze (filecmp).
+ -Multi-Core teljesítmény: A fájltartalom ellenőrzése párhuzamosan, az összes rendelkezésre álló processzormagon fut (ProcessPoolExecutor), így több ezer fájl  esetén is villámgyors.
+ -Részletes jelentés: Consolas betűtípussal formázott, átlátható naplót készít az eltérésekről.
 
 ### 🎞️ Médiafájl-kezelő
 - Képek/videók előnézete, törlése
