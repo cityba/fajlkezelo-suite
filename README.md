@@ -89,7 +89,6 @@ pyinstaller --noconfirm --onedir --windowed --clean `
 --add-data "hetesregi.py;." `
 --add-data "nyolc.py;." `
 --add-data "kilenc.py;." `
---add-data "profiles.json;." `
 --add-data "C:/Users/ap/Documents/fajlkezelo-suite/icon.ico;." `
 --add-data "C:/Users/ap/Documents/fajlkezelo-suite/icon.png;." `
 --hidden-import=mysql.connector `
