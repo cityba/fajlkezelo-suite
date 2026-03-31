@@ -179,11 +179,11 @@ Szit File Manager Suite is a Python-based, modular system that combines various 
 - Export results to Excel
 
 ### 📁🔍📁 Smart Folder Comparison 
--The most advanced module in the package, capable of fully auditing two directory structures:
--Structure Analysis: Identifies missing folders and files on both sides.
--Binary Content Inspection: Doesn't just look at file names; compares file contents at the byte level (filecmp).
--Multi-Core Performance: File content checking runs in parallel on all available processor cores (ProcessPoolExecutor), making it lightning fast even for thousands of files.
--Detailed Reporting: Creates a clear log of discrepancies formatted in Consolas font.
+- The most advanced module in the package, capable of fully auditing two directory structures:
+- Structure Analysis: Identifies missing folders and files on both sides.
+- Binary Content Inspection: Doesn't just look at file names; compares file contents at the byte level (filecmp).
+- Multi-Core Performance: File content checking runs in parallel on all available processor cores (ProcessPoolExecutor), making it lightning fast even for thousands of files.
+- Detailed Reporting: Creates a clear log of discrepancies formatted in Consolas font.
 
 ### 🎞️ Media File Manager
 - Preview and delete images/videos
