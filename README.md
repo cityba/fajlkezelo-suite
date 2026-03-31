@@ -5,6 +5,7 @@ A Szita Fájlkezelő Suite egy Python alapú, moduláris rendszer, amely külön
 
 - **Fájlkezelő** – Másolás, duplikációk kezelése, üres mappák törlése
 - **Fájlkereső** – Tartalomalapú keresés fájlformátumokban
+- **Intelligens Mappa Összehasonlítás** -Mappák, fájlok, méretei összehasonlítása 
 - **Médiafájl-kezelő** – Képek, videók előnézete és törlése
 - **Hálózati eszközkereső** – Aktív eszközök felderítése LAN-on
 - **EXE Gyártó** – Python szkriptekből végrehajtható fájlok készítése
@@ -25,6 +26,13 @@ A Szita Fájlkezelő Suite egy Python alapú, moduláris rendszer, amely külön
 - Keresés `.docx`, `.xlsx`, `.pdf` tartalom alapján
 - Dátumszűrés, fájltípus kizárás
 - Eredmények exportja Excelbe
+
+### 📁🔍📁 Intelligens Mappa Összehasonlítás 
+-A csomag legfejlettebb modulja, amely képes két könyvtárstruktúra teljes körű auditálására:
+-Struktúra elemzése: Azonosítja a hiányzó mappákat és fájlokat mindkét oldalon.
+-Bináris tartalomvizsgálat: Nem csak a fájlneveket nézi; a fájlok tartalmát bájt szinten hasonlítja össze (filecmp).
+-Multi-Core teljesítmény: A fájltartalom ellenőrzése párhuzamosan, az összes rendelkezésre álló processzormagon fut (ProcessPoolExecutor), így több ezer fájl esetén is villámgyors.
+-Részletes jelentés: Consolas betűtípussal formázott, átlátható naplót készít az eltérésekről.
 
 ### 🎞️ Médiafájl-kezelő
 - Képek/videók előnézete, törlése
@@ -148,6 +156,7 @@ Szit File Manager Suite is a Python-based, modular system that combines various 
 
 - **File Manager** – Copy, manage duplicates, delete empty folders
 - **File Finder** – Content-based search in file formats
+- **Smart Folder Comparison** -Compare folders, files, their sizes
 - **Media File Manager** – Preview and delete images, videos
 - **Network Device Finder** – Detect active devices on LAN
 - **EXE Maker** – Create executable files from Python scripts
@@ -168,6 +177,13 @@ Szit File Manager Suite is a Python-based, modular system that combines various 
 - Search by `.docx`, `.xlsx`, `.pdf` content
 - Date filtering, file type exclusion
 - Export results to Excel
+
+### 📁🔍📁 Smart Folder Comparison 
+-The most advanced module in the package, capable of fully auditing two directory structures:
+-Structure Analysis: Identifies missing folders and files on both sides.
+-Binary Content Inspection: Doesn't just look at file names; compares file contents at the byte level (filecmp).
+-Multi-Core Performance: File content checking runs in parallel on all available processor cores (ProcessPoolExecutor), making it lightning fast even for thousands of files.
+-Detailed Reporting: Creates a clear log of discrepancies formatted in Consolas font.
 
 ### 🎞️ Media File Manager
 - Preview and delete images/videos
@@ -218,17 +234,47 @@ python template.py
 
 EXE compilation with PyInstaller
 
-pyinstaller --noconfirm --onefile --windowed --icon "icon.ico" --upx-dir "upx" --name "Sieve suite" \
---add-data "single.py;." --add-data "two.py;." --add-data "harmas.py;." --add-data "four.py;." \
---add-data "otos.py;." --add-data "six.py;." --add-data "hetes.py;." \
---add-data "nyolc.py;." --hidden-import=PyQt5.QtNetwork --hidden-import=PyQt5.QtPrintSupport --hidden-import=appdirs \ 
---hidden-import matplotlib.backends.backend_qt5agg --hidden-import matplotlib.backends.qt_compat \
---hidden-import pefile --hidden-import numpy --hidden import pyodbc --hidden import mysql.connector \
---hidden-import docx --hidden-import openpyxl --hidden-import PyPDF2 \
---hidden-import PyQt5.QtMultimedia --hidden-import PyQt5.QtMultimediaWidgets \
---hidden-import psutil --hidden-import GPUtil \
---add-binary "PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia" \
---clean "sablon.py"
+pyinstaller --noconfirm --onedir --windowed --clean `
+--name "Szita-suite" `
+--icon "C:\..\Documents\fajlkezelo-suite\icon.ico" `
+--upx-dir "D:\upx\upx-5.0.1-win64" `
+--add-binary "/mappa/msvcp140.dll;." `
+--add-binary "mappa/vcruntime140.dll;." `
+--add-binary "mappa/vcruntime140_1.dll;." `
+--add-data "egyes.py;." `
+--add-data "kettes.py;." `
+--add-data "harmas.py;." `
+--add-data "negyes.py;." `
+--add-data "otos.py;." `
+--add-data "hatos.py;." `
+--add-data "hetes.py;." `
+--add-data "hetesregi.py;." `
+--add-data "nyolc.py;." `
+--add-data "kilenc.py;." `
+--add-data "profiles.json;." `
+--add-data "C:/../Documents/fajlkezelo-suite/icon.ico;." `
+--add-data "C:/../Documents/fajlkezelo-suite/icon.png;." `
+--hidden-import=mysql.connector `
+--hidden-import=mysql.connector.locales.eng.client_error `
+--hidden-import=pyodbc `
+--hidden-import=PyQt5.QtNetwork `
+--hidden-import=PyQt5.QtPrintSupport `
+--hidden-import=PyQt5.QtMultimedia `
+--hidden-import=PyQt5.QtMultimediaWidgets `
+--hidden-import=matplotlib.backends.backend_qt5agg `
+--hidden-import=matplotlib.backends.qt_compat `
+--hidden-import=appdirs `
+--hidden-import=pefile `
+--hidden-import=numpy `
+--hidden-import=pandas `
+--hidden-import=docx `
+--hidden-import=openpyxl `
+--hidden-import=PyPDF2 `
+--hidden-import=psutil `
+--hidden-import=GPUtil `
+--collect-all mysql.connector `
+--collect-all pyodbc `
+"sablon.py"
 
 Use cases
 File system cleaning, maintenance
