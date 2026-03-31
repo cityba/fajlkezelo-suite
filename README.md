@@ -77,8 +77,11 @@ EXE fordítás PyInstaller-rel
  
 pyinstaller --noconfirm --onedir --windowed --clean `
 --name "Szita-suite" `
---icon "C:\Users\ap\Documents\fajlkezelo-suite\icon.ico" `
+--icon "C:\..\Documents\fajlkezelo-suite\icon.ico" `
 --upx-dir "D:\upx\upx-5.0.1-win64" `
+--add-binary "/mappa/msvcp140.dll;." `
+--add-binary "mappa/vcruntime140.dll;." `
+--add-binary "mappa/vcruntime140_1.dll;." `
 --add-data "egyes.py;." `
 --add-data "kettes.py;." `
 --add-data "harmas.py;." `
@@ -89,8 +92,9 @@ pyinstaller --noconfirm --onedir --windowed --clean `
 --add-data "hetesregi.py;." `
 --add-data "nyolc.py;." `
 --add-data "kilenc.py;." `
---add-data "C:/Users/ap/Documents/fajlkezelo-suite/icon.ico;." `
---add-data "C:/Users/ap/Documents/fajlkezelo-suite/icon.png;." `
+--add-data "profiles.json;." `
+--add-data "C:/../Documents/fajlkezelo-suite/icon.ico;." `
+--add-data "C:/../Documents/fajlkezelo-suite/icon.png;." `
 --hidden-import=mysql.connector `
 --hidden-import=mysql.connector.locales.eng.client_error `
 --hidden-import=pyodbc `
