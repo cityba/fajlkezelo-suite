@@ -78,6 +78,7 @@ EXE fordítás PyInstaller-rel
 pyinstaller --noconfirm --onefile --windowed --icon "icon.ico" --upx-dir "upx" --name "Szita suite" \
 --add-data "egyes.py;." --add-data "kettes.py;." --add-data "harmas.py;." --add-data "negyes.py;." \
 --add-data "otos.py;." --add-data "hatos.py;." --add-data "hetes.py;." \
+--add-data "nyolc.py;." --hidden-import=PyQt5.QtNetwork --hidden-import=PyQt5.QtPrintSupport --hidden-import=appdirs \ 
 --hidden-import matplotlib.backends.backend_qt5agg --hidden-import matplotlib.backends.qt_compat \
 --hidden-import pefile --hidden-import numpy   --hidden import pyodbc  --hidden import mysql.connector \
 --hidden-import docx --hidden-import openpyxl --hidden-import PyPDF2 \
@@ -190,6 +191,7 @@ EXE compilation with PyInstaller
 pyinstaller --noconfirm --onefile --windowed --icon "icon.ico" --upx-dir "upx" --name "Sieve suite" \
 --add-data "single.py;." --add-data "two.py;." --add-data "harmas.py;." --add-data "four.py;." \
 --add-data "otos.py;." --add-data "six.py;." --add-data "hetes.py;." \
+--add-data "nyolc.py;." --hidden-import=PyQt5.QtNetwork --hidden-import=PyQt5.QtPrintSupport --hidden-import=appdirs \ 
 --hidden-import matplotlib.backends.backend_qt5agg --hidden-import matplotlib.backends.qt_compat \
 --hidden-import pefile --hidden-import numpy --hidden import pyodbc --hidden import mysql.connector \
 --hidden-import docx --hidden-import openpyxl --hidden-import PyPDF2 \
