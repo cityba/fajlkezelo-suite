@@ -124,6 +124,7 @@ pyinstaller --noconfirm --onedir --windowed --clean `
 --collect-all mysql.connector `
 --collect-all pyodbc `
 "sablon.py"
+
 ```
 
 Használati esetek
@@ -149,10 +150,10 @@ Erőforrás-optimalizált megvalósítás
 Platformfüggetlen (Windows, macOS, Linux)
 
 
-# Szit File Manager Suite 2025
+# Szita File Manager Suite 2025
 
  
-Szit File Manager Suite is a Python-based, modular system that combines various file management and networking tasks in a modern user interface. The application contains five main modules:
+Szita File Manager Suite is a Python-based, modular system that combines various file management and networking tasks in a modern user interface. The application contains five main modules:
 
 - **File Manager** – Copy, manage duplicates, delete empty folders
 - **File Finder** – Content-based search in file formats
@@ -276,6 +277,8 @@ pyinstaller --noconfirm --onedir --windowed --clean `
 --collect-all pyodbc `
 "sablon.py"
 
+```
+
 Use cases
 File system cleaning, maintenance
 
@@ -297,3 +300,5 @@ Multithreaded operation
 Resource-optimized implementation
 
 Platform-independent (Windows, macOS, Linux)
+
+## Overview
