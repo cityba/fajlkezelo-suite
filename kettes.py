@@ -81,7 +81,10 @@ class SearchWorker(QThread):
         self.start_date = start_date
         self.end_date = end_date
         self.stop_flag = False
-        self.compiled_pattern = re.compile(pattern, re.IGNORECASE if not exact_match else 0)
+        
+        # JAVÍTÁS: re.escape() biztosítja, hogy a $, [, ] karakterek szó szerint kerüljenek keresésre
+        escaped_pattern = re.escape(pattern)
+        self.compiled_pattern = re.compile(escaped_pattern, re.IGNORECASE if not exact_match else 0)
         
         self.excluded_extensions = [
             ".exe", ".mp3", ".mp4", ".wav", ".jpg", ".jpeg", ".png", ".gif", ".bmp",
@@ -170,7 +173,7 @@ class SearchWorker(QThread):
                     self.file_found_single.emit(file_path, match_count)
                 return (file_path, match_count)
             
-            with ThreadPoolExecutor( max_workers=num_workers) as executor:
+            with ThreadPoolExecutor(max_workers=num_workers) as executor:
                 futures = [executor.submit(process_file, fp) for fp in file_list]
                 
                 for future in as_completed(futures):
@@ -595,7 +598,6 @@ class FileSearchApp(QWidget):
         self.layout().insertWidget(self.layout().count() - 1, save_buttons)
 
 if __name__ == "__main__":
-    
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     app = QApplication(sys.argv)
     app.setStyle('Fusion')

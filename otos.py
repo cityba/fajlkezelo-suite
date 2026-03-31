@@ -221,6 +221,11 @@ class BuildWorker(QThread):
         
         cmd = [python_exe, '-m', 'PyInstaller', os.path.basename(script)]
         cmd += ['--name', name, '--noconfirm',  f'--{build_mode}',  '--clean']
+
+        # SQL ÉS BINÁRIS KÉNYSZERÍTÉS (Ez hiányzott!)
+        cmd += ['--collect-all', 'mysql.connector']
+        cmd += ['--collect-all', 'pyodbc']
+        cmd += ['--hidden-import', 'mysql.connector.locales.eng.client_error']
         
         # Új: Konzol elrejtése (windowed) opció hozzáadása
         if self.app.windowed_mode:

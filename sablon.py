@@ -1,202 +1,169 @@
 import sys
 import os
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QAction, QTabWidget, QWidget, 
-    QVBoxLayout, QLabel, QSizePolicy, QFileDialog, QMessageBox
+    QApplication, QMainWindow, QAction, QStackedWidget, QWidget, 
+    QVBoxLayout, QHBoxLayout, QLabel, QFileDialog, QMessageBox, QPushButton
 )
 from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt
 import platform
- 
-# Import modules with error handling
+
+# --- PROFI EXE MODUL FIX (PYTHON 3.13+) ---
+if getattr(sys, 'frozen', False):
+    if hasattr(os, 'add_dll_directory'):
+        os.add_dll_directory(sys._MEIPASS)
+    os.environ['PATH'] = sys._MEIPASS + os.pathsep + os.environ.get('PATH', '')
+
+# Modulok importálása
 modules = {}
-module_names = ["egyes", "kettes", "harmas", "negyes", "otos", "hatos", "hetes", "nyolc"]
+module_names = ["egyes", "kettes", "harmas", "negyes", "otos", "hatos", "hetes", "nyolc", "kilenc"]
 
 for module_name in module_names:
     try:
         module = __import__(module_name)
         modules[module_name] = module
-    except ImportError as e:
-        # Create dummy classes for missing modules
+    except ImportError:
         class Dummy(QWidget):
             def __init__(self, parent=None):
                 super().__init__(parent)
-                layout = QVBoxLayout()
-                layout.addWidget(QLabel(f"Modul {module_name} nem elérhető"))
-                self.setLayout(layout)
+                l = QVBoxLayout(self)
+                l.addWidget(QLabel(f"Modul {module_name} nem elérhető"))
         setattr(sys.modules[__name__], module_name.capitalize(), Dummy)
 
 class MainApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Szita Fájlkezelő Suite 2025")
-        self.setGeometry(100, 100, 1200, 900)
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #2c3e50;
-                color: #ecf0f1;
-            }
-            QTabWidget::pane {
-                border: 0;
-            }
-            QLabel#title {
-                color: #ecf0f1;
-                font-size: 28px;
-                font-weight: bold;
-            }
-        """)
+        self.setGeometry(100, 100, 1300, 900)
+        self.setStyleSheet("QMainWindow { background-color: #2c3e50; }")
         
-        # Beállítjuk az alkalmazás ikonját
-        self.get_icon_path()
-        self.icon_path = self.get_icon_path()
-        if self.get_icon_path:
-            self.setWindowIcon(QIcon(self.icon_path))
         self.init_ui()
         self.init_menu()
 
-    def get_icon_path(self):
-        base_path = getattr(sys, '_MEIPASS', os.path.abspath('.'))
-        
-        # Try .ico file (Windows)
-        ico_path = os.path.join(base_path, 'icon.ico')
-        if os.path.exists(ico_path):
-            return ico_path
-        
-        # Try .png file (cross-platform)
-        png_path = os.path.join(base_path, 'icon.png')
-        if os.path.exists(png_path):
-            return png_path
-        
-        return None
-
     def init_ui(self):
-        central_widget = QWidget(self)
+        central_widget = QWidget()
         self.setCentralWidget(central_widget)
+        main_layout = QVBoxLayout(central_widget)
         
-        layout = QVBoxLayout(central_widget)
-        layout.setAlignment(Qt.AlignCenter)
-        
-        title = QLabel("Fájlkezelő Suite 2025", self)
-        title.setObjectName("title")
+        # 1. FŐCÍM
+        title = QLabel("Fájlkezelő Suite 2025")
+        title.setStyleSheet("color: #ecf0f1; font-size: 24px; font-weight: bold; margin: 10px;")
         title.setAlignment(Qt.AlignCenter)
-        title.setFont(QFont("Arial", 28, QFont.Bold))
-        layout.addWidget(title)
+        main_layout.addWidget(title)
         
-        self.tabs = QTabWidget()
-        self.tabs.setTabPosition(QTabWidget.West)
-        self.tabs.setStyleSheet("""
-            QTabBar::tab {
-                background: #34495e;
-                color: #ecf0f1;
-                padding: 15px;
-                margin: 2px;
-                border-radius: 5px;
-            }
-            QTabBar::tab:selected {
-                background: #1abc9c;
-            }
-        """)
+        # 2. VÍZSZINTES GOMBSOR (Navigation Bar)
+        nav_container = QWidget()
+        nav_layout = QHBoxLayout(nav_container)
+        nav_layout.setContentsMargins(5, 5, 5, 5)
+        nav_layout.setSpacing(8)
         
-        # Add tabs dynamically
+        # 3. STACKED WIDGET (A tartalomnak, fülek nélkül)
+        self.content_stack = QStackedWidget()
+        
         tab_data = [
             ("Fájl kezelő", "egyes", "FileCopyApp"),
             ("Fájlba kereső", "kettes", "FileSearchApp"),
-            ("Fájlkereső és Törlő", "nyolc", "FileFinderApp"),
-            ("Médiafájlok", "harmas", "MediaFinder"),
+            ("Fájlkereső/Törlő", "nyolc", "FileFinderApp"),
+            ("Mappa Összehasonlító", "kilenc", "ProFolderDiff"),
+            ("Média", "harmas", "MediaFinder"),
             ("Hálózat", "negyes", "NetworkScanner"),
-            ("Sig és exe gyártó", "otos", "BuildApp"),
-             ("EXE elemző", "hatos", "ProcessMonitorApp"),
-            ("SQL szerkesztő", "hetes", "DatabaseBrowser"),
+            ("EXE készítő", "otos", "BuildApp"),
+            ("EXE elemző", "hatos", "ProcessMonitorApp"),
+            ("SQL kezelő", "hetes", "DatabaseBrowser"),
         ]
         
-        for name, module_name, class_name in tab_data:
+        btn_style = """
+            QPushButton {
+                background-color: #34495e;
+                color: #ecf0f1;
+                border: 2px solid #2c3e50;
+                padding: 8px 15px;
+                font-weight: bold;
+                border-radius: 5px;
+            }
+            QPushButton:hover { background-color: #1abc9c; border-color: #16a085; }
+            QPushButton:pressed { background-color: #16a085; }
+        """
+
+        for i, (name, module_name, class_name) in enumerate(tab_data):
+            # Navigációs gomb
+            btn = QPushButton(name)
+            btn.setStyleSheet(btn_style)
+            btn.clicked.connect(lambda checked, idx=i: self.content_stack.setCurrentIndex(idx))
+            nav_layout.addWidget(btn)
+            
+            # Widget példányosítás
             if module_name in modules:
-                module = modules[module_name]
-                widget_class = getattr(module, class_name)
-                self.tabs.addTab(widget_class(), name)
+                try:
+                    widget = getattr(modules[module_name], class_name)()
+                    self.content_stack.addWidget(widget)
+                except Exception as e:
+                    self.content_stack.addWidget(QLabel(f"Hiba a {name} betöltésekor: {e}"))
             else:
-                dummy = QLabel(f"{name} modul nem elérhető")
-                self.tabs.addTab(dummy, name)
+                lbl = QLabel(f"Hiányzó modul: {module_name}")
+                lbl.setAlignment(Qt.AlignCenter)
+                self.content_stack.addWidget(lbl)
         
-        layout.addWidget(self.tabs)
+        main_layout.addWidget(nav_container)
+        main_layout.addWidget(self.content_stack)
 
     def init_menu(self):
         menubar = self.menuBar()
-        menubar.setStyleSheet("""
-            QMenuBar {
-                background-color: #34495e;
-                color: #ecf0f1;
-                padding: 5px;
-            }
-            QMenuBar::item:selected {
-                background: #1abc9c;
-            }
-            QMenu {
-                background-color: #34495e;
-                color: #ecf0f1;
-            }
-            QMenu::item:selected {
-                background: #1abc9c;
-            }
-        """)
-        
+        menubar.setStyleSheet("QMenuBar { background-color: #34495e; color: #ecf0f1; }")
         file_menu = menubar.addMenu("Fájl")
-        exit_action = QAction("Kilépés", self)
-        exit_action.setShortcut("Ctrl+Q")
-        exit_action.triggered.connect(self.close)
-        file_menu.addAction(exit_action)
-        
-        tools_menu = menubar.addMenu("Eszközök")
-        for i, (name, _, _) in enumerate([
-            ("Fájl kezelő", "egyes", "FileCopyApp"),
-            ("Fájlba kereső", "kettes", "FileSearchApp"),          
-            ("Fájlkereső és Törlő", "nyolc", "FileFinderApp"),
-            ("Médiafájlok", "harmas", "MediaFinder"),
-            ("Hálózat", "negyes", "NetworkScanner"),
-            ("Sig és exe gyártó", "otos", "BuildApp"),
-             ("EXE elemző", "hatos", "ProcessMonitorApp"),
-            ("SQL szerkesztő", "hetes", "DatabaseBrowser"),
-        ]):
-            tools_menu.addAction(name, lambda idx=i: self.tabs.setCurrentIndex(idx))
-        
-        help_menu = menubar.addMenu("Segítség")
-        about_action = QAction("Névjegy", self)
-        about_action.triggered.connect(self.show_about)
-        help_menu.addAction(about_action)
-
-    def show_about(self):
-        about_text = """
-        <b>Fájlkezelő Suite 2025</b><br><br>
-        Verzió: 1.0<br>
-        Készült: Python 3.10 + PyQt5<br><br>
-        <i>Teljes körű fájlkezelési megoldások</i>
-        """
-        QMessageBox.information(self, "Névjegy", about_text)
+        exit_act = QAction("Kilépés", self)
+        exit_act.triggered.connect(self.close)
+        file_menu.addAction(exit_act)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    
-    # Windows DPI awareness
     if platform.system() == 'Windows':
         try:
             from ctypes import windll
             windll.shcore.SetProcessDpiAwareness(1)
-        except:
-            pass
-    
+        except: pass
     window = MainApp()
     window.show()
     sys.exit(app.exec_())
-            
-    
  
- #   --add-data egyes.py;.  --add-data kettes.py;.   --add-data harmas.py;.   --add-data negyes.py;.   --add-data otos.py;.    --add-data hatos.py;.  --add-data hetes.py;.  --add-data nyolc.py;. --hidden-import=PyQt5.QtNetwork --hidden-import=PyQt5.QtPrintSupport --hidden-import=appdirs --hidden-import matplotlib.backends.backend_qt5agg --hidden-import matplotlib.backends.qt_compat  --hidden-import pefile --hidden-import numpy   --hidden-import pyodbc  --hidden-import mysql.connector --hidden-import docx   --hidden-import openpyxl   --hidden-import PyPDF2   --hidden-import PyQt5.QtMultimedia   --hidden-import PyQt5.QtMultimediaWidgets --hidden-import psutil --hidden-import GPUtil  --add-binary C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia  
-
- 
- 
- # jó  --add-data egyes.py;.  --add-data kettes.py;.   --add-data harmas.py;.   --add-data negyes.py;.  --hidden-import docx   --hidden-import openpyxl   --hidden-import PyPDF2   --hidden-import PyQt5.QtMultimedia   --hidden-import PyQt5.QtMultimediaWidgets  --add-data otos.py;.  --hidden-import psutil --hidden-import GPUtil  --add-binary C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia   --add-binary C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia 
- #megy  pyinstaller --noconfirm --onefile --windowed `  --icon "C:\Users\ap\Downloads\favicon.ico" `  --upx-dir "D:\upx" `  --name "Szita suite" `  --add-data "egyes.py;." `  --add-data "kettes.py;." `  --add-data "harmas.py;." `  --add-data "negyes.py;." `  --hidden-import docx `  --hidden-import openpyxl `  --hidden-import PyPDF2 `  --hidden-import PyQt5.QtMultimedia `  --hidden-import PyQt5.QtMultimediaWidgets ` --add-data "otos.py;."  --hidden-import psutil --hidden-import GPUtil  --add-binary "C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia" `  --add-binary "C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia" `  --clean "sablon.py"
- #--add-binary C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia   --add-binary C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia 
- 
- # --hidden-import docx   --hidden-import openpyxl   --hidden-import PyPDF2   --hidden-import PyQt5.QtMultimedia --hidden-import PyQt5.QtMultimediaWidgets --hidden-import psutil --hidden-import GPUtil --add-binary C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats:PyQt5\Qt5\plugins\multimedia   --add-binary C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats:PyQt5\Qt5\plugins\multimedia
- #pyinstaller --noconfirm --onedir --windowed   --icon "C:\Users\ap\Documents\fajlkezelo-suite\icon.ico"   --name "Szita suite"   --add-data "egyes.py;."   --add-data "kettes.py;."   --add-data "harmas.py;."   --add-data "negyes.py;."   --hidden-import docx   --hidden-import openpyxl   --hidden-import PyPDF2   --hidden-import PyQt5.QtMultimedia   --hidden-import PyQt5.QtMultimediaWidgets  --add-data "otos.py;."  --hidden-import psutil --hidden-import GPUtil  --add-binary "C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia"   --add-binary "C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia"   --clean "sablon.py"
+ #   --add-data egyes.py;.  --add-data kettes.py;.   --add-data harmas.py;.   --add-data negyes.py;.   --add-data otos.py;.    --add-data hatos.py;.  --add-data hetes.py;.  --add-data nyolc.py;. --add-data kilenc.py;. --hidden-import=PyQt5.QtNetwork --hidden-import=PyQt5.QtPrintSupport --hidden-import=appdirs --hidden-import matplotlib.backends.backend_qt5agg --hidden-import matplotlib.backends.qt_compat  --hidden-import pefile --hidden-import numpy   --hidden-import pyodbc  --hidden-import mysql.connector --hidden-import docx   --hidden-import openpyxl   --hidden-import PyPDF2   --hidden-import PyQt5.QtMultimedia   --hidden-import PyQt5.QtMultimediaWidgets --hidden-import psutil --hidden-import GPUtil  --add-binary C:\Users\ap\AppData\Local\Programs\Python\Python313\Lib\site-packages\PyQt5\Qt5\plugins\imageformats;PyQt5\Qt5\plugins\multimedia  
+r"""
+pyinstaller --noconfirm --onedir --windowed --clean `
+--name "Szita-suite" `
+--icon "C:\Users\ap\Documents\fajlkezelo-suite\icon.ico" `
+--upx-dir "D:\upx\upx-5.0.1-win64" `
+--add-data "egyes.py;." `
+--add-data "kettes.py;." `
+--add-data "harmas.py;." `
+--add-data "negyes.py;." `
+--add-data "otos.py;." `
+--add-data "hatos.py;." `
+--add-data "hetes.py;." `
+--add-data "hetesregi.py;." `
+--add-data "nyolc.py;." `
+--add-data "kilenc.py;." `
+--add-data "profiles.json;." `
+--add-data "C:/Users/ap/Documents/fajlkezelo-suite/icon.ico;." `
+--add-data "C:/Users/ap/Documents/fajlkezelo-suite/icon.png;." `
+--hidden-import=mysql.connector `
+--hidden-import=mysql.connector.locales.eng.client_error `
+--hidden-import=pyodbc `
+--hidden-import=PyQt5.QtNetwork `
+--hidden-import=PyQt5.QtPrintSupport `
+--hidden-import=PyQt5.QtMultimedia `
+--hidden-import=PyQt5.QtMultimediaWidgets `
+--hidden-import=matplotlib.backends.backend_qt5agg `
+--hidden-import=matplotlib.backends.qt_compat `
+--hidden-import=appdirs `
+--hidden-import=pefile `
+--hidden-import=numpy `
+--hidden-import=pandas `
+--hidden-import=docx `
+--hidden-import=openpyxl `
+--hidden-import=PyPDF2 `
+--hidden-import=psutil `
+--hidden-import=GPUtil `
+--collect-all mysql.connector `
+--collect-all pyodbc `
+"sablon.py"
+"""
